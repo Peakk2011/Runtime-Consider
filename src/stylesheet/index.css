@@ -8,6 +8,27 @@
     -webkit-user-select: none;
 }
 
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--theme-scrollbar-track-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--theme-scrollbar-thumb-bg);
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-border-3-default);
+}
+
+/* Selection */
 ::selection {
     background: var(--theme-selection-1-bg);
     color: var(--theme-selection-2-text);
@@ -29,9 +50,9 @@
 
 .app-title {
     font-size: 26px;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 1.8rem;
-    letter-spacing: -0.4px;
+    letter-spacing: -0.8px;
     line-height: 0;
     color: var(--theme-text-1-default);
 
@@ -41,14 +62,14 @@
 }
 
 body {
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', monospace;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', 'Leelawadee', monospace;
 
     background-color: var(--theme-bg-1-default);
-    background-image: 
+    background-image:
         linear-gradient(0deg, transparent 24%, var(--theme-grid-1-overlay) 25%, var(--theme-grid-1-overlay) 26%, transparent 27%, transparent 74%, var(--theme-grid-1-overlay) 75%, var(--theme-grid-1-overlay) 76%, transparent 77%, transparent),
         linear-gradient(90deg, transparent 24%, var(--theme-grid-1-overlay) 25%, var(--theme-grid-1-overlay) 26%, transparent 27%, transparent 74%, var(--theme-grid-1-overlay) 75%, var(--theme-grid-1-overlay) 76%, transparent 77%, transparent);
     background-size: 50px 50px;
-    
+
     color: var(--theme-text-1-default);
     margin: 0;
     padding: 0;
@@ -118,8 +139,8 @@ body {
     border-radius: 0px;
 
     font-family: inherit;
+    letter-spacing: 0px;
     font-size: 12.5px;
-    line-height: 1.4;
     padding: 1.15rem;
 
     min-height: 48px;
@@ -233,7 +254,7 @@ body {
     background-color: var(--theme-bg-2-default);
     border: solid 1px var(--theme-border-1-default);
     border-radius: 0px;
-    
+
     padding: 1.15rem;
     white-space: pre-wrap;
     word-wrap: break-word;

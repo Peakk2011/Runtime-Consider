@@ -1,4 +1,4 @@
-import { BrowserWindowConstructorOptions } from "electron";
+import { BrowserWindowConstructorOptions, nativeTheme } from "electron";
 import path from "node:path";
 // eslint-disable-next-line import/no-unresolved
 import { windowConfig } from "@window/windowConfig";
@@ -29,7 +29,7 @@ export const getWindowOptions = (): BrowserWindowConstructorOptions => ({
     
     titleBarOverlay: {
         color: '#00000000',
-        symbolColor: '#000000',
+        symbolColor: nativeTheme.shouldUseDarkColors ? '#FFFFFF' : '#000000',
         height: 36
     },
 

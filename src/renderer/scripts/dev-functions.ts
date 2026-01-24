@@ -6,6 +6,7 @@ const Consider = {
         (window as any).todayCommitted = false;
 
         (window as any).todayInput.value = "";
+        (window as any).todayInput.style.display = "block";
         (window as any).todayInput.disabled = false;
         (window as any).commitBtn.disabled = false;
         (window as any).committedNotice.style.display = "none";
@@ -21,6 +22,7 @@ const Consider = {
 
         (window as any).todayCommitted = false;
         (window as any).todayInput.disabled = false;
+        (window as any).todayInput.style.display = "block";
         (window as any).commitBtn.disabled = false;
         (window as any).committedNotice.style.display = "none";
         (window as any).todayInput.value = "";
