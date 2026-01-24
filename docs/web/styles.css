@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Prociono&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* Scrollbar */
+    --theme-scrollbar-thumb-bg: #444;
+    --theme-scrollbar-track-bg: #141414;
+
+    /* Selection */
+    --theme-selection-1-bg: #28353b;
+    --theme-selection-2-text: #fff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--theme-scrollbar-track-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--theme-scrollbar-thumb-bg);
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-border-3-default);
+}
+
+/* Selection */
+::selection {
+    background: var(--theme-selection-1-bg);
+    color: var(--theme-selection-2-text);
+}
+
+body {
+    font-family: 'Inter', 'Geist Mono', monospace;
+    background: #000;
+    color: #fff;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 550;
+    letter-spacing: -0.45px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin: 3rem 0 1rem;
+    font-family: 'Geist Mono', monospace;
+    color: #888;
+}
+
+p {
+    font-family: 'Geist Mono', monospace;
+}
+
+.tagline {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    color: #aaa;
+}
+
+.cta {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+    font-weight: 550;
+
+    background: #fff;
+    color: #000;
+    text-decoration: none;
+    margin: 1rem 1rem 1rem 0;
+    border: 2px solid #fff;
+    font-family: 'Geist Mono', monospace;
+}
+
+.cta:hover {
+    background: #000;
+    color: #fff;
+}
+
+/* Content */
+
+.application-icons-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.application-icons-header img {
+    border: solid 1px #424242;
+    width: 150px;
+    height: auto;
+    border-radius: 24px;
+}
