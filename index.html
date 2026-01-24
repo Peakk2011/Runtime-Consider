@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime Consider</title>
+    <link rel="stylesheet" href="./src/stylesheet/index.css">
+    <link rel="stylesheet" href="./src/stylesheet/variables.css">
+</head>
+
+<body>
+
+    <div id="application-titlebar">
+        <!-- <div class="app-title">Runtime Consider</div> -->
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="app-title">Runtime Consider</div>
+        </div>
+
+        <div class="today-section">
+            <div class="date-label" id="todayLabel"></div>
+            <div class="committed-notice" id="committedNotice" style="display: none;"></div>
+        </div>
+
+        <div class="input-message">
+            <textarea class="writing-surface" id="todayInput" placeholder="Execution log.."></textarea>
+            <button class="commit-button" id="commitBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                    <path d="M440-240v-368L296-464l-56-56 240-240 240 240-56 56-144-144v368h-80Z" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="history-section">
+            <div class="history-title">HISTORY</div>
+            <div id="historyContainer"></div>
+        </div>
+    </div>
+
+    <script src="./src/renderer/scripts/index.ts" type="module"></script>
+</body>
+
+</html>

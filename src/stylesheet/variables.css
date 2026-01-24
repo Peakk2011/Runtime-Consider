@@ -1,0 +1,12 @@
+:root {
+    /**
+     * @var --shadow
+     * @type {box-shadow}
+     * @description Multi-layer shadow for context menus
+     * @layers 3 shadow layers for depth
+     */
+    --shadow:
+        0px 24px 38px hsla(0, 0%, 0%, 0.14),
+        0px 9px 46px hsla(0, 0%, 0%, 0.12),
+        0px 11px 15px hsla(0, 0%, 0%, 0.20);
+}
