@@ -25,7 +25,7 @@ export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
  */
 const formatLogMessage = (level: LogLevel, message: string): string => {
     const timestamp = new Date().toISOString();
-    return `YOUR_SOFTWARE_NAME [${timestamp}] [${level}] ${message}`;
+    return `Runtime Consider [${timestamp}] [${level}] ${message}`;
 };
 
 /**

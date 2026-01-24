@@ -1,47 +1,43 @@
-# Electron core bolierplace application
+# Runtime Consider
+## Recording what actually happened
 
-**Nextgen Boilerplate & Core Utilities for modern web apps.**  
-Built to let you start new apps instantly without setup headaches.  
+### What is this application for
 
-## Get Started
+Runtime Consider is a desktop application built to record reality, not to plan your daily life when creating things.
 
-```bash
-git clone https://github.com/Peakk2011/BoilerplateApplication.git
-cd BoilerplateApplication
+The core idea is simple yet profound: each day of a human's life is a real-time operation, and what happens in the course of that operation can only be recorded once. This app doesn't attempt to improve, motivate, or optimize user behavior; it exists solely to reflect what is actually happening.
 
-npm install # Install modules
-npm start   # Run/Start this project
-```
+Most productivity tools work in the future. They ask you what you want to do, what you should do, or what you hope to accomplish. But
 
-Then start building your app, and everything that you want is already well set up.
+Runtime Consider intentionally rejects that mindset. This app works entirely in the past. It only wants to focus on what has already happened. Anything that didn't happen isn't considered a failure or a gap; it's simply a lack of data.
 
-## What is this repository
+The conceptual model for this application isn't a to-do list, a journal, or a habit tracker. A more accurate conceptual model is closer to a system log or a change history in a version control system (GIT). Each day is an addable entry; once written, it cannot be changed. There's no concept of editing, improving, or optimizing the past. The past is immutable by design.
 
-lightweight, high-performance starter kit for TypeScript + Vite + Electron and includes a **ready-to-use folder structure**, **clean architecture**, and **5 core utility files**
+This immutability isn't a technical limitation; it's a crucial UX decision. Allowing editing would transform the app into a storytelling tool. 1. Users can manipulate memories to feel better, but this isn't the reality our app, like Runtime Consider, adheres to, and it's not our stance. What we can do is refuse to do so. We value truth more than convenience.
 
-## What it does?
+### What inside
 
-- Provides a solid project structure with minimal config.  
-- Supplies 5 core utility files for:
+Upon launching, the first thing it does is check one condition: Has today's entry been saved?
 
-  - CSP Handler
-  - Fetches and parses a JSON file from a given URL.
-  - Application error handler
-  - userAgent (This is used to describe your system, what it uses to run things, and more.)
-  - IPC Validator
- 
-## Why?
+If the answer is no, the application immediately displays the writing area. Once focused on the writing area, no navigation is necessary; the interface makes it clear that today's entry hasn't been edited.
 
-1. **Fixes common boilerplate problems**  
-   - Most boilerplates are **bloated, rigid, or incomplete**.  
-   - This thing going to strips unnecessary stuff and keeps only **what you actually need**.  
+If the answer is yes, the writing area is locked both visually and functionally, and the application switches to focusing on usage history instead.
 
-2. **Designed for you**  
-   - Everything is **typed, modular, and scalable**.  
-   - Utilities are **pre-analyzed**: only things apps really use.  
+The writing area is designed to be as simple as possible. It's just a plain multi-line text input field. There's no formatting, no Markdown, no toolbar, and no fancy UI. Instead, it uses a fixed, appropriately sized font—not too pretty, not too ugly, but perfectly placed. This UI isn't for a retro aesthetic, but to enhance the feeling of recording a story rather than writing an article. Each line represents a fact; pressing Enter creates a new line. A single action saves the entry for that day.
 
-3. **Speed = Productivity**  
-   - One day of setup now saves **hours or days in every future project**.  
-   - Focus on building features, not wiring folders, imports, or state.  
+Saving an entry for a specific day is irreversible. Once save is pressed, the input field becomes read-only and remains so permanently. There is no undo, no edit mode, and no emergency exit. This mimics the behavior of low-level systems where disk writing is a one-way operation. The severity of this action is intentional; the app is supposed to feel slightly awkward at this moment.
 
-Lets you start coding features **immediately**, without rewriting boilerplate every time.  
+Below the writing area is the usage history view. The history is linear, scrollable, and read-only. Dates are sorted from newest to oldest. There is no calendar, no monthly overview, and no abstract time display. Time flows only in one direction. Clicking on a past date does not open the editor; it only displays that date for reading.
+
+If a date is missing, the app will clearly indicate this. Empty dates are not auto-filled, hidden, or manipulated. Empty data is considered valid; it doesn't attempt to guess the mood, efficiency, or intent behind the missing data.
+
+In terms of design, the app is modern and simple. The design language borrows concepts from the terminal and code editor but avoids visual imitation. There are no neon colors or gimmicks. Typography and spacing serve most of the purpose. The interface should feel calm, precise, and serious; it shouldn't feel fun or stimulating.
+
+"Record the Truth" - This is not fantasy.
+"บันทึกความจริง" - นี่ไม่ใช่เรื่องเพ้อฝัน
+
+### License
+
+MIT License
+Peakk2011 - Mint teams
+Copyright (c) 2026

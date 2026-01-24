@@ -22,6 +22,7 @@ export const getWindowOptions = (): BrowserWindowConstructorOptions => ({
     
     ...(process.platform !== 'win32' ? {
         titleBarStyle: 'hiddenInset',
+        trafficLightPosition: { x: 18, y: 16 }
     } : {
         titleBarStyle: 'hidden',
     }),

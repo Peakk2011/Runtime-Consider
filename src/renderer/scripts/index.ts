@@ -73,7 +73,7 @@ const loadEntries = async (): Promise<void> => {
 
             const todayEntry = entries.find((e) => e.date === today);
             if (todayEntry) {
-                todayInput.value = "";
+                todayInput.style.display = "none";
                 todayInput.disabled = true;
                 commitBtn.disabled = true;
                 todayCommitted = true;
@@ -108,7 +108,7 @@ const handleCommit = async (): Promise<void> => {
     try {
         await window.storage.set(`entry:${today}`, JSON.stringify(entry));
 
-        todayInput.value = "";
+        todayInput.style.display = "none";
         todayInput.disabled = true;
         commitBtn.disabled = true;
         todayCommitted = true;
@@ -135,7 +135,7 @@ const renderHistory = (): void => {
           <div class="history-entry today">
             <div class="history-date">${todayEntry.date} (today)</div>
             <div class="history-text">${escapeHtml(todayEntry.text)}</div>
-            <div class="history-timestamp">committed ${new Date(todayEntry.timestamp).toLocaleString()}</div>
+            <div class="history-timestamp">Committed ${new Date(todayEntry.timestamp).toLocaleString()}</div>
           </div>
         `;
     }
@@ -147,7 +147,7 @@ const renderHistory = (): void => {
             <div class="history-entry">
               <div class="history-date">${entry.date}</div>
               <div class="history-text">${escapeHtml(entry.text)}</div>
-              <div class="history-timestamp">committed ${new Date(entry.timestamp).toLocaleString()}</div>
+              <div class="history-timestamp">Committed ${new Date(entry.timestamp).toLocaleString()}</div>
             </div>
         `).join('');
     }

@@ -117,8 +117,8 @@ const getLocalStorageInfo = async (
  */
 export const createUserAgent = async (
     win: BrowserWindow | null | undefined,
-    appName = 'YOUR_SOFTWARE_NAME ',
-    appVersion = 'YOUR_SOFTWARE_VERSION'
+    appName = 'Runtime Consider',
+    appVersion = '1.0.0'
 ): Promise<string> => {
     const osInfo: string = info();
     const engineInfo: string = getEngineInfo();

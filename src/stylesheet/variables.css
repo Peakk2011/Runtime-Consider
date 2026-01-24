@@ -9,4 +9,107 @@
         0px 24px 38px hsla(0, 0%, 0%, 0.14),
         0px 9px 46px hsla(0, 0%, 0%, 0.12),
         0px 11px 15px hsla(0, 0%, 0%, 0.20);
+
+    /* Dark Mode - Default Theme */
+    /* Backgrounds */
+    --theme-bg-1-default: #0f0f0f;
+    --theme-bg-2-default: #141414;
+    --theme-bg-3-default: #181818;
+    --theme-bg-4-hover: #262626;
+
+    /* Borders */
+    --theme-border-1-default: #303030;
+    --theme-border-2-default: #333;
+    --theme-border-3-default: #444;
+    --theme-border-4-subtle: #141414;
+
+    /* Text */
+    --theme-text-1-default: #fefefe;
+    --theme-text-2-default: #e2e2e2;
+    --theme-text-3-default: #b0b0b0;
+    --theme-text-4-disabled: #888;
+
+    /* Selection */
+    --theme-selection-1-bg: #28353b;
+    --theme-selection-2-text: #fff;
+
+    /* Effects */
+    --theme-grid-1-overlay: rgba(255, 255, 255, 0.05);
+    --theme-mask-1-start: rgba(15, 15, 15, 0);
+    --theme-mask-2-mid: rgba(15, 15, 15, 0.25);
+    --theme-mask-3-end: #0f0f0f;
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+    :root {
+        --shadow:
+            0px 24px 38px hsla(0, 0%, 0%, 0.04),
+            0px 9px 46px hsla(0, 0%, 0%, 0.02),
+            0px 11px 15px hsla(0, 0%, 0%, 0.06);
+
+        /* Backgrounds */
+        --theme-bg-1-default: #ffffff;
+        --theme-bg-2-default: #f5f5f5;
+        --theme-bg-3-default: #ebebeb;
+        --theme-bg-4-hover: #e8e8e8;
+
+        /* Borders */
+        --theme-border-1-default: #d0d0d0;
+        --theme-border-2-default: #c0c0c0;
+        --theme-border-3-default: #b0b0b0;
+        --theme-border-4-subtle: #e8e8e8;
+
+        /* Text */
+        --theme-text-1-default: #0a0a0a;
+        --theme-text-2-default: #1a1a1a;
+        --theme-text-3-default: #505050;
+        --theme-text-4-disabled: #888;
+
+        /* Selection */
+        --theme-selection-1-bg: #b4d5fe;
+        --theme-selection-2-text: #000;
+
+        /* Effects */
+        --theme-grid-1-overlay: rgba(0, 0, 0, 0.03);
+        --theme-mask-1-start: rgba(255, 255, 255, 0);
+        --theme-mask-2-mid: rgba(255, 255, 255, 0.25);
+        --theme-mask-3-end: #ffffff;
+    }
+}
+
+/* Manual Light Mode Toggle */
+[data-theme="light"] {
+    --shadow:
+        0px 24px 38px hsla(0, 0%, 0%, 0.04),
+        0px 9px 46px hsla(0, 0%, 0%, 0.02),
+        0px 11px 15px hsla(0, 0%, 0%, 0.06);
+
+    /* Backgrounds */
+    --theme-bg-1-default: #ffffff;
+    --theme-bg-2-default: #f5f5f5;
+    --theme-bg-3-default: #ebebeb;
+    --theme-bg-4-hover: #e8e8e8;
+
+    /* Borders */
+    --theme-border-1-default: #d0d0d0;
+    --theme-border-2-default: #c0c0c0;
+    --theme-border-3-default: #b0b0b0;
+    --theme-border-4-subtle: #e8e8e8;
+
+    /* Text */
+    --theme-text-1-default: #0a0a0a;
+    --theme-text-2-default: #1a1a1a;
+    --theme-text-3-default: #505050;
+    --theme-text-4-disabled: #888;
+
+    /* Selection */
+    --theme-selection-1-bg: #b4d5fe;
+    --theme-selection-2-text: #000;
+
+    /* Effects */
+    --theme-grid-1-overlay: rgba(0, 0, 0, 0.03);
+    --theme-mask-1-start: rgba(255, 255, 255, 0);
+    --theme-mask-2-mid: rgba(255, 255, 255, 0.25);
+    --theme-mask-3-end: #ffffff;
 }
