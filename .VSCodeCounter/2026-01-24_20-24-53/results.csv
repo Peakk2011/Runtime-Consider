@@ -1,0 +1,18 @@
+"filename", "language", "PostCSS", "TypeScript", "JSON", "comment", "blank", "total"
+"e:\Files website\DesktopProject\Runtime-Consider\src\config\window.json", "JSON", 0, 0, 11, 0, 0, 11
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\app\createApplication.ts", "TypeScript", 0, 21, 0, 0, 4, 25
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\window\createWindow.ts", "TypeScript", 0, 20, 0, 2, 5, 27
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\window\hwnd\browserWindow.ts", "TypeScript", 0, 5, 0, 0, 1, 6
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\window\hwnd\windowLoader.ts", "TypeScript", 0, 56, 0, 11, 17, 84
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\window\hwnd\windowOptions.ts", "TypeScript", 0, 31, 0, 1, 9, 41
+"e:\Files website\DesktopProject\Runtime-Consider\src\core\window\windowConfig.ts", "TypeScript", 0, 30, 0, 1, 4, 35
+"e:\Files website\DesktopProject\Runtime-Consider\src\main.ts", "TypeScript", 0, 2, 0, 0, 0, 2
+"e:\Files website\DesktopProject\Runtime-Consider\src\preload.ts", "TypeScript", 0, 0, 0, 2, 1, 3
+"e:\Files website\DesktopProject\Runtime-Consider\src\renderer\renderer.ts", "TypeScript", 0, 1, 0, 0, 0, 1
+"e:\Files website\DesktopProject\Runtime-Consider\src\renderer\scripts\dev-functions.ts", "TypeScript", 0, 29, 0, 0, 9, 38
+"e:\Files website\DesktopProject\Runtime-Consider\src\renderer\scripts\index.ts", "TypeScript", 0, 147, 0, 2, 31, 180
+"e:\Files website\DesktopProject\Runtime-Consider\src\stylesheet\index.css", "PostCSS", 222, 0, 0, 3, 48, 273
+"e:\Files website\DesktopProject\Runtime-Consider\src\stylesheet\variables.css", "PostCSS", 80, 0, 0, 27, 20, 127
+"e:\Files website\DesktopProject\Runtime-Consider\src\utils\logger.ts", "TypeScript", 0, 54, 0, 39, 12, 105
+"e:\Files website\DesktopProject\Runtime-Consider\src\utils\userAgent.ts", "TypeScript", 0, 96, 0, 36, 13, 145
+"Total", "-", 302, 492, 11, 124, 174, 1103
