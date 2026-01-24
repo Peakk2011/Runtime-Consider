@@ -33,11 +33,11 @@ If a date is missing, the app will clearly indicate this. Empty dates are not au
 
 In terms of design, the app is modern and simple. The design language borrows concepts from the terminal and code editor but avoids visual imitation. There are no neon colors or gimmicks. Typography and spacing serve most of the purpose. The interface should feel calm, precise, and serious; it shouldn't feel fun or stimulating.
 
-"Record the Truth" - This is not fantasy.
+"Record the Truth" - This is not fantasy.<br>
 "บันทึกความจริง" - นี่ไม่ใช่เรื่องเพ้อฝัน
 
 ### License
 
-MIT License
-Peakk2011 - Mint teams
-Copyright (c) 2026
+MIT License<br>
+Peakk2011 - Mint teams<br>
+Copyright (c) 2026<br>
