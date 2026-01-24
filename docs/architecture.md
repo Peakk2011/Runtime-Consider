@@ -1,3 +1,5 @@
+<img src="../assets/Runtime Consider.png" alt="Runtime Consider Logo" width="150"/>
+
 # Technical Architecture Documentation <br>Runtime Consider
 
 ## Table of Contents
