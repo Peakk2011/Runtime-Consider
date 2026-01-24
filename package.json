@@ -1,8 +1,8 @@
 {
-  "name": "boilerplateapplication",
-  "productName": "boilerplateapplication",
+  "name": "runtime_consider",
+  "productName": "Runtime Consider",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Record what happened. Not what you wish happened.\nEach day commits once. Forever.",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",

@@ -34,6 +34,8 @@ export const getWindowOptions = (): BrowserWindowConstructorOptions => ({
     },
 
     webPreferences: {
-        preload: preloadPath
+        preload: preloadPath,
+        contextIsolation: true,
+        nodeIntegration: false
     }
 });
