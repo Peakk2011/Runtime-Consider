@@ -49,16 +49,23 @@
 }
 
 .app-title {
+    /* font-size: 26px;
     font-size: 26px;
     font-weight: 600;
-    margin-bottom: 1.8rem;
     letter-spacing: -0.8px;
     line-height: 0;
     color: var(--theme-text-1-default);
+    font-family: 'system-ui', sans-serif; */
 
-    font-family: 'system-ui', sans-serif;
+    margin-bottom: 1rem;
     z-index: 3;
     position: relative;
+
+    & img {
+        width: 200px;
+        height: auto;
+        fill: var(--theme-text-1-default);
+    }
 }
 
 body {
@@ -139,8 +146,10 @@ body {
     border-radius: 0px;
 
     font-family: inherit;
-    letter-spacing: 0px;
-    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    font-size: 14px;
+    font-weight: 600;
+
     padding: 1.15rem;
 
     min-height: 48px;
@@ -181,7 +190,7 @@ body {
     border: none;
     outline: none;
 
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem 0.8rem;
     border-radius: 100vmax;
 
     line-height: 0;
@@ -192,8 +201,13 @@ body {
     letter-spacing: 0.3px;
 
     position: fixed;
-    right: 0.8rem;
-    top: 0.6rem;
+    right: 0.4rem;
+    top: 0.4rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* gap: 4px; */
 
     & svg {
         fill: var(--theme-text-3-default);
@@ -205,9 +219,12 @@ body {
     border-color: var(--theme-border-2-default);
 }
 
-.commit-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.commit-button span {
+    color: var(--theme-text-3-default);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 14px;
+    line-height: 0;
 }
 
 .committed-notice {

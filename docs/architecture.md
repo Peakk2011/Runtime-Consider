@@ -84,31 +84,51 @@
 
 ```
 src/
-├── main.ts                       # Entry point - initializes application
-├── preload.ts                    # Preload script for renderer security
-├── renderer/
-│   ├── renderer.ts               # Renderer process setup
-│   ├── scripts/                  # Frontend scripts
-│   │   ├── index.ts              # Script entry
-│   │   └── dev-functions.ts      # Development utilities
-│   └── stylesheet/               # UI styling
-│       ├── index.css             # Main styles
-│       └── variables.css         # CSS variables & theme
+├── main.ts                                # Entry point - initializes application
+├── preload.ts                             # Preload script for renderer security
+├── preload/
+│   └── electronAPI.ts                     # IPC bridge - exposes safe APIs
+├── types/
+│   └── index.ts                           # Type definitions for app
 ├── config/
-│   └── window.json               # Window configuration (size, bounds)
+│   └── window.json                        # Window configuration (size, bounds)
 ├── core/
+│   ├── bootstrap.ts                       # Core services initialization
 │   ├── app/
-│   │   └── createApplication.ts  # Application initialization
-│   └── window/
-│       ├── createWindow.ts       # Window creation orchestration
-│       ├── windowConfig.ts       # Window configuration schema
-│       └── hwnd/                 # Hardware window interface
-│           ├── browserWindow.ts  # BrowserWindow instantiation
-│           ├── windowOptions.ts  # BrowserWindow options factory
-│           └── windowLoader.ts   # URL/file loading strategy
-└── utils/
-    ├── logger.ts                 # Structured logging system
-    └── userAgent.ts              # System & storage information
+│   │   └── createApplication.ts           # Application initialization
+│   ├── window/
+│   │   ├── createWindow.ts                # Window creation orchestration
+│   │   ├── windowConfig.ts                # Window configuration schema
+│   │   └── hwnd/                          # Hardware window interface
+│   │       ├── browserWindow.ts           # BrowserWindow instantiation
+│   │       ├── windowOptions.ts           # BrowserWindow options factory
+│   │       └── windowLoader.ts            # URL/file loading strategy
+│   ├── storage/
+│   │   ├── storageManager.ts              # File system storage operations
+│   │   ├── schema.ts                      # Zod schemas for validation
+│   │   └── entryStateManager.ts           # Immutability enforcement
+│   ├── ipc/
+│   │   └── registerHandlers.ts            # IPC handler registration
+│   ├── config/
+│   │   └── configManager.ts               # Configuration management
+│   ├── error/
+│   │   └── errorHandler.ts                # Error handling & recovery
+│   └── utils/
+│       └── dateUtils.ts                   # Date utilities & timeline
+├── renderer/
+│   ├── renderer.ts                        # Renderer process setup
+│   ├── scripts/                           # Frontend scripts
+│   │   ├── index.ts                       # Main renderer logic
+│   │   └── dev-functions.ts               # Development utilities
+│   └── stylesheet/                        # UI styling
+│       ├── index.css                      # Main styles
+│       ├── variables.css                  # CSS variables & theme
+│       └── components.css                 # Component styles
+├── utils/
+│   ├── logger.ts                          # Structured logging system
+│   └── userAgent.ts                       # System & storage information
+└── __tests__/
+    └── index.test.ts                      # Test suite (Jest-ready)
 ```
 
 ---
@@ -348,8 +368,8 @@ interface LocalStorageInfo {
 {
     "width": number,
     "height": number,
-    "resizable": true,
-    "fullscreen": false,
+    "resizable": boolean,
+    "fullscreen": boolean,
     "title": string,
     "min": {
         "width": number,
@@ -511,19 +531,299 @@ npm run publish    # Publish to release channel
 
 ---
 
-## Future Expansion Points
+## 8. Data Persistence System
 
-1. **IPC Communication** - Add main/renderer message passing
-2. **Database Integration** - Persist configuration and user data
-3. **Theming System** - Expand CSS variables for full theming
-4. **State Management** - Consider Redux/Zustand for renderer
-5. **Testing Framework** - Add Jest/Vitest for unit tests
-6. **Auto-Update** - Implement electron-updater
-7. **Native Modules** - Integrate native Node.js modules as needed
+### Storage Architecture
+
+**File:** [src/core/storage/storageManager.ts](../src/core/storage/storageManager.ts)
+
+**Purpose:** Persistent storage on file system using Electron's userData directory
+
+**Directory Structure:**
+```
+userData/
+├── runtime-consider/
+│   ├── entries/
+│   │   ├── 2026-01-15.json
+│   │   ├── 2026-01-16.json
+│   └── backups/
+│   │   ├── backup-2026-01-16T12-30-45.json
+│   └── config.json
+│   └── manifest.json
+```
+
+**Key Features:**
+- **Immutable Entries** - Once committed, entries cannot be modified
+- **Automatic Backups** - Daily or configurable interval backups
+- **Export Functionality** - Export all data as JSON
+- **Data Recovery** - Backup restoration capability
+
+### Schema Validation
+
+**File:** [src/core/storage/schema.ts](../src/core/storage/schema.ts)
+
+**Schemas Defined:**
+- `EntrySchema` - Validates daily entry structure
+- `ManifestSchema` - Validates entry manifest
+- `AppConfigSchema` - Validates application configuration
+
+**Validation Library:** Zod 4.3.4 for runtime type checking
 
 ---
 
-**Last Updated:** January 24, 2026 <br>
-**Version:** 1.0.0 <br>
+## 9. IPC Communication System
+
+### Main ↔ Renderer Communication
+
+**Files:**
+- [src/preload/electronAPI.ts](../src/preload/electronAPI.ts) - Preload script with exposed APIs
+- [src/core/ipc/registerHandlers.ts](../src/core/ipc/registerHandlers.ts) - IPC handler registration
+
+**Exposed APIs to Renderer:**
+
+```typescript
+window.electron.storage: StorageAPI {
+    getToday(): Promise<string>
+    getTodayEntry(): Promise<Entry | null>
+    getAllEntries(): Promise<string[]>
+    getEntry(date: string): Promise<Entry | null>
+    saveEntry(date: string, text: string): Promise<void>
+    deleteEntry(date: string): Promise<void>
+    exportData(exportPath: string): Promise<void>
+    createBackup(): Promise<string>
+}
+
+window.electron.config: ConfigAPI {
+    getConfig(): Promise<AppConfig>
+    saveConfig(config: AppConfig): Promise<void>
+}
+
+window.electron.logger: LoggerAPI {
+    info(message: string, data?: object): void
+    warn(message: string, data?: object): void
+    error(message: string, error?: object): void
+}
+```
+
+**Security:** Uses contextBridge to safely expose only necessary APIs
+
+### IPC Handlers
+
+All handlers include:
+- Parameter validation
+- Date format verification
+- Immutability enforcement
+- Error handling with logging
+- Schema validation with Zod
+
+---
+
+## 10. Immutability Enforcement
+
+### Entry State Management
+
+**File:** [src/core/storage/entryStateManager.ts](../src/core/storage/entryStateManager.ts)
+
+**Key Methods:**
+- `commitEntry(date)` - Mark entry as immutable
+- `isCommitted(date)` - Check if entry is locked
+- `assertCanModify(date)` - Throw error if attempting modification
+- `getCommittedEntries()` - Get all immutable entries
+
+**Implementation:**
+```typescript
+// Once committed, trying to modify throws error:
+"Entry for 2026-01-15 is committed and immutable"
+```
+
+---
+
+## 11. Date Handling & Timeline
+
+### Date Utilities
+
+**File:** [src/core/utils/dateUtils.ts](../src/core/utils/dateUtils.ts)
+
+**Utilities Provided:**
+- Date parsing and formatting (YYYY-MM-DD)
+- Date range calculations
+- Gap detection (missing days)
+- Week/month calculations
+- Human-readable formatting ("Today", "Yesterday", etc.)
+- Timeline creation with empty day indicators
+
+**Key Methods:**
+```typescript
+DateUtils.getToday()                    // Today's date
+DateUtils.getDateRange(start, end)      // All dates between
+DateUtils.findMissingDates(dates, ...)  // Find gaps
+DateUtils.formatForDisplay(date)        // Human-readable
+DateUtils.getWeekDates(date)            // Week dates
+DateUtils.getMonthDates(date)           // Month dates
+```
+
+### Timeline Display
+
+**Interface:**
+```typescript
+interface TimelineDay {
+    date: string
+    dateFormatted: string
+    hasEntry: boolean
+    entry?: DisplayEntry
+    isToday: boolean
+    isEmpty: boolean  // Clearly marks missing days
+}
+```
+
+---
+
+## 12. Configuration Management
+
+### Config Manager
+
+**File:** [src/core/config/configManager.ts](../src/core/config/configManager.ts)
+
+**Configuration Options:**
+```typescript
+interface AppConfig {
+    theme: "light" | "dark" | "system"
+    timeFormat: "12h" | "24h"
+    autoBackup: boolean
+    backupInterval: number  // Days
+    version: string
+}
+```
+
+**Features:**
+- Default configuration values
+- Validation with Zod schema
+- Export/import capability
+- Reset to defaults option
+
+---
+
+## 13. Error Handling & Recovery
+
+### Error Types
+
+**File:** [src/core/error/errorHandler.ts](../src/core/error/errorHandler.ts)
+
+**Custom Errors:**
+- `StorageError` - File system operation failures
+- `ValidationError` - Schema validation failures
+- `ImmutabilityError` - Attempted modification of locked entry
+- `DataCorruptionError` - Corrupted data detected
+
+### Error Recovery Strategies
+
+**Available Methods:**
+- `ErrorRecovery.recoverFromStorageError()` - Storage failure recovery
+- `ErrorRecovery.validateDataIntegrity()` - Data validation
+- `ErrorRecovery.recoverCorruptedEntry()` - Backup restoration
+- `withErrorBoundary()` - Wrapper for async operations
+- `withRetry()` - Automatic retry with exponential backoff
+
+---
+
+## 14. Type System
+
+### Core Types
+
+**File:** [src/types/index.ts](../src/types/index.ts)
+
+**Defined Types:**
+- `Entry` - Daily immutable record
+- `DisplayEntry` - Entry with formatted fields
+- `AppState` - Current application state
+- `AppConfig` - Configuration object
+- `TimelineDay` - Timeline entry
+- `OperationResult<T>` - Operation result wrapper
+- `StorageMetrics` - Storage statistics
+- `ErrorResponse` - Standardized error responses
+
+**Type Safety:**
+- TypeScript strict mode
+- Zod runtime validation
+- Full type inference from schemas
+
+---
+
+## 15. Testing Infrastructure
+
+### Test Files
+
+**File:** [src/__tests__/index.test.ts](../src/__tests__/index.test.ts)
+
+**Test Suites:**
+- StorageManager tests
+- DateUtils tests
+- EntryStateManager tests
+- Schema validation tests
+- ConfigManager tests
+- Error handling tests
+- IPC communication tests
+
+**Test Framework:** Jest (ready to implement)
+
+**Run Tests:**
+```bash
+npm test                # Run once
+npm run test:watch      # Watch mode
+npm run test:coverage   # With coverage report
+```
+
+---
+
+## Integration Points
+
+### 1. Main Application Initialization
+- Load config from storage
+- Initialize StorageManager
+- Register IPC handlers
+- Create main window
+
+### 2. Window Creation
+- Create BrowserWindow with config
+- Load preload script
+- Expose APIs via contextBridge
+
+### 3. Renderer Startup
+- Initialize UI
+- Check today's entry status
+- Load entry history
+- Render timeline with date utilities
+
+### 4. Data Operations
+- Validate with Zod schemas
+- Store with StorageManager
+- Enforce immutability
+- Update EntryStateManager
+
+### 5. Error Handling
+- Catch validation errors
+- Attempt recovery
+- Log with Logger
+- Display user-friendly messages
+
+---
+
+## Summary of Implemented Features
+
+✅ **Complete Persistent Storage** - File system based with backups
+✅ **IPC Communication** - Secure main/renderer bridge
+✅ **Schema Validation** - Zod-powered runtime type checking
+✅ **Immutability Enforcement** - Entry state management
+✅ **Date Handling** - Complete date utilities and timeline
+✅ **Configuration Management** - User preferences and settings
+✅ **Error Handling** - Custom errors, recovery, and retry logic
+✅ **Type Safety** - Full TypeScript support
+✅ **Testing Infrastructure** - Jest-ready test suite
+✅ **Documentation** - Comprehensive architecture guide
+
+---
+
+**Last Updated:** January 28, 2026 <br>
+**Version:** 1.1.0 (Core Systems Complete) <br>
 **Author:** Peakk2011 - Mint teams <br>
 **License:** MIT <a href="../LICENSE.md">License Here</a> <br>
