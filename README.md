@@ -1,7 +1,10 @@
-<img src="./assets/Runtime Consider.png" alt="Runtime Consider Logo" width="150"/>
+<img src="./assets/Runtime Consider.png" alt="Runtime Consider Logo" width="125"/>
 
 # Runtime Consider
 ## Recording what actually happened
+
+<br>
+<img src="./assets/mockup-of-runtime-consider.svg" alt="Runtime Consider Hero" width="600"/>
 
 ### What is this application for
 
