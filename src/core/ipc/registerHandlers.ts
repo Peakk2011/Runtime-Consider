@@ -2,6 +2,8 @@ import { ipcMain } from "electron";
 import { getStorage } from "@core/storage/storageManager";
 import { validateEntry , validateAppConfig } from "@core/storage/schema";
 import { logger } from "@utils/logger";
+import * as path from "path";
+import { promises as fsPromises } from "fs";
 
 /**
  * Register all IPC handlers for main process
@@ -133,6 +135,18 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("storage:exportData", async (_event, exportPath: string) => {
         try {
+            if (!exportPath || !path.isAbsolute(exportPath)) {
+                throw new Error("Invalid export path");
+            }
+            
+            const dir = path.dirname(exportPath);
+            
+            try {
+                await fsPromises.access(dir);
+            } catch (err) {
+                throw new Error("Export directory does not exist or is not accessible");
+            }
+
             await storage.exportData(exportPath);
             logger.info("Data exported", { path: exportPath });
         } catch (error) {

@@ -1,6 +1,7 @@
 import { app } from "electron";
 import * as path from "path";
 import * as fs from "fs";
+import { promises as fsPromises } from "fs";
 import { logger } from "@utils/logger";
 
 /**
@@ -42,6 +43,15 @@ export class StorageManager {
     }
 
     /**
+     * Clear singleton instance - test helper only
+     */
+    public static clearInstanceForTests(): void {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore access test-only static
+        StorageManager.instance = undefined as unknown as StorageManager;
+    }
+
+    /**
      * Initialize required directories
      */
     private initializeDirectories(): void {
@@ -70,14 +80,17 @@ export class StorageManager {
      * Save an entry to disk
      */
     public async saveEntry(date: string, data: unknown): Promise<void> {
+        const lock = await this.acquireLock(date);
         try {
             const filePath = this.getEntryPath(date);
             const jsonData = JSON.stringify(data, null, 2);
-            fs.writeFileSync(filePath, jsonData, "utf-8");
+            await this.writeAtomic(filePath, jsonData);
             logger.info("Entry saved", { date, path: filePath });
         } catch (error) {
             logger.error(`Failed to save entry for date ${date}`, error);
             throw error;
+        } finally {
+            await this.releaseLock(lock).catch(() => {});
         }
     }
 
@@ -87,10 +100,12 @@ export class StorageManager {
     public async loadEntry(date: string): Promise<unknown> {
         try {
             const filePath = this.getEntryPath(date);
-            if (!fs.existsSync(filePath)) {
+            try {
+                await fsPromises.access(filePath, fs.constants.R_OK);
+            } catch {
                 return null;
             }
-            const data = fs.readFileSync(filePath, "utf-8");
+            const data = await fsPromises.readFile(filePath, "utf-8");
             return JSON.parse(data);
         } catch (error) {
             logger.error(`Failed to load entry for date ${date}`, error);
@@ -103,10 +118,12 @@ export class StorageManager {
      */
     public async loadAllEntries(): Promise<string[]> {
         try {
-            if (!fs.existsSync(this.entriesDir)) {
+            try {
+                await fsPromises.access(this.entriesDir, fs.constants.R_OK);
+            } catch {
                 return [];
             }
-            const files = fs.readdirSync(this.entriesDir);
+            const files = await fsPromises.readdir(this.entriesDir);
             return files.filter((f) => f.endsWith(".json"));
         } catch (error) {
             logger.error("Failed to load all entries", error);
@@ -119,21 +136,26 @@ export class StorageManager {
      * Note: This goes against immutability principle, use with caution
      */
     public async deleteEntry(date: string): Promise<void> {
+        const lock = await this.acquireLock(date);
         try {
             const filePath = this.getEntryPath(date);
-            if (!fs.existsSync(filePath)) {
+            try {
+                await fsPromises.access(filePath, fs.constants.R_OK);
+            } catch {
                 return;
             }
 
             // Create backup before deletion
             const backupPath = this.getBackupPath(date);
-            fs.copyFileSync(filePath, backupPath);
+            await fsPromises.copyFile(filePath, backupPath);
 
-            fs.unlinkSync(filePath);
+            await fsPromises.unlink(filePath);
             logger.warn("Entry deleted", { date, backupPath });
         } catch (error) {
             logger.error(`Failed to delete entry for date ${date}`, error);
             throw error;
+        } finally {
+            await this.releaseLock(lock).catch(() => {});
         }
     }
 
@@ -156,7 +178,7 @@ export class StorageManager {
                 entries: data,
             };
 
-            fs.writeFileSync(exportPath, JSON.stringify(exportData, null, 2), "utf-8");
+            await this.writeAtomic(exportPath, JSON.stringify(exportData, null, 2));
             logger.info("Data exported", { path: exportPath, entryCount: entries.length });
         } catch (error) {
             logger.error("Failed to export data", error);
@@ -167,7 +189,7 @@ export class StorageManager {
     /**
      * Create automatic backup
      */
-    public async createBackup(): Promise<string> {
+    public async createBackup(maxRetain: number = 10): Promise<string> {
         try {
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
             const backupName = `backup-${timestamp}.json`;
@@ -187,8 +209,11 @@ export class StorageManager {
                 entries: data,
             };
 
-            fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2), "utf-8");
+            await this.writeAtomic(backupPath, JSON.stringify(backupData, null, 2));
             logger.info("Backup created", { path: backupPath });
+
+            // Prune old backups
+            await this.pruneBackups(maxRetain);
 
             return backupPath;
         } catch (error) {
@@ -204,7 +229,7 @@ export class StorageManager {
         try {
             const configPath = path.join(this.baseDir, "config.json");
             const jsonData = JSON.stringify(config, null, 2);
-            fs.writeFileSync(configPath, jsonData, "utf-8");
+            await this.writeAtomic(configPath, jsonData);
             logger.info("Config saved", { path: configPath });
         } catch (error) {
             logger.error("Failed to save config", error);
@@ -218,10 +243,12 @@ export class StorageManager {
     public async loadConfig(): Promise<unknown> {
         try {
             const configPath = path.join(this.baseDir, "config.json");
-            if (!fs.existsSync(configPath)) {
+            try {
+                await fsPromises.access(configPath, fs.constants.R_OK);
+            } catch {
                 return null;
             }
-            const data = fs.readFileSync(configPath, "utf-8");
+            const data = await fsPromises.readFile(configPath, "utf-8");
             return JSON.parse(data);
         } catch (error) {
             logger.error("Failed to load config", error);
@@ -242,6 +269,96 @@ export class StorageManager {
     private getBackupPath(date: string): string {
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         return path.join(this.backupsDir, `${date}-${timestamp}.json`);
+    }
+
+    /**
+     * Write file atomically.
+     */
+    private async writeAtomic(targetPath: string, data: string): Promise<void> {
+        const dir = path.dirname(targetPath);
+        const base = path.basename(targetPath);
+        const tmpName = `${base}.tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const tmpPath = path.join(dir, tmpName);
+
+        await fsPromises.writeFile(tmpPath, data, "utf-8");
+        await fsPromises.rename(tmpPath, targetPath);
+    }
+
+    /**
+     * Lock file for an entry. Returns lockPath string.
+     * If lock exists and is older than staleMs, it will be removed.
+     */
+    private async acquireLock(
+        date: string,
+        retries: number = 50,
+        retryDelay = 100,
+        staleMs: number = 1000 * 60 * 5
+    ): Promise<string> {
+        const lockPath = path.join(this.entriesDir, `${date}.lock`);
+
+        for (let i = 0; i < retries; i++) {
+            try {
+                const fd = await fsPromises.open(lockPath, "wx");
+                const info = { pid: process.pid, ts: new Date().toISOString() };
+                await fd.writeFile(JSON.stringify(info));
+                await fd.close();
+                return lockPath;
+            } catch (err: any) {
+                // If exists, check age
+                try {
+                    const stat = await fsPromises.stat(lockPath);
+                    const age = Date.now() - stat.mtimeMs;
+                    if (age > staleMs) {
+                        await fsPromises.unlink(lockPath);
+                        continue;
+                    }
+                } catch { /* ignore */ }
+                await new Promise((r) => setTimeout(r, retryDelay));
+            }
+        }
+        throw new Error("Failed to acquire lock for " + date);
+    }
+
+    private async releaseLock(lockPath: string): Promise<void> {
+        try {
+            await fsPromises.unlink(lockPath);
+        } catch (err) {
+            // ignore
+        }
+    }
+
+    /**
+     * Old backups, keep `maxKeep` newest files
+     */
+    private async pruneBackups(maxKeep: number): Promise<void> {
+        try {
+            const files = await fsPromises.readdir(this.backupsDir);
+            const backups = files.filter((f) => f.endsWith(".json"));
+            if (backups.length <= maxKeep) return;
+
+            const withTimes = await Promise.all(
+                backups.map(async (f) => {
+                    const p = path.join(this.backupsDir, f);
+                    const stat = await fsPromises.stat(p);
+                    return { file: p, mtime: stat.mtimeMs };
+                })
+            );
+
+            withTimes.sort((a, b) => b.mtime - a.mtime); // newest first
+            const toDelete = withTimes.slice(maxKeep);
+            await Promise.all(toDelete.map((d) => fsPromises.unlink(d.file)));
+            
+            logger.info(
+                "Pruned old backups",
+                {
+                    kept: maxKeep,
+                    deleted: toDelete.length
+                }
+            );
+        } catch (err) {
+            // non-fatal
+            logger.warn("Failed to prune backups", err);
+        }
     }
 
     /**

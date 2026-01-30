@@ -2,8 +2,10 @@
  * Unit tests for Runtime Consider
  * 
  * Note: Run with: npm test or npm run test:watch
- * Test framework: Jest (to be installed)
+ * Test framework: Vitest
  */
+
+import { describe, it, expect } from 'vitest';
 
 // Storage Manager Tests
 
