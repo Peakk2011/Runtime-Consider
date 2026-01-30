@@ -1,3 +1,5 @@
+import { initializeMagneticEffect } from './anim';
+
 interface Entry {
     date: string;
     text: string;
@@ -122,7 +124,8 @@ const loadAllEntries = async (): Promise<void> => {
             todayTextInput.disabled = true;
             todayTextInput.readOnly = true;
             todayTextInput.style.cursor = 'not-allowed';
-            todayTextInput.style.opacity = '0.6';
+            todayTextInput.style.opacity = '0';
+            todayTextInput.style.display = 'none';
             
             commitButton.disabled = true;
             commitButton.style.display = "none";
@@ -185,7 +188,8 @@ const handleCommitEntry = async (): Promise<void> => {
         todayTextInput.disabled = true;
         todayTextInput.readOnly = true;
         todayTextInput.style.cursor = 'not-allowed';
-        todayTextInput.style.opacity = '0.6';
+        todayTextInput.style.opacity = '0';
+        todayTextInput.style.display = 'none';
         
         commitButton.disabled = true;
         commitButton.style.display = "none";
@@ -206,6 +210,8 @@ const handleCommitEntry = async (): Promise<void> => {
 
         todayTextInput.removeEventListener('input', handleTextareaInput);
         todayTextInput.removeEventListener('keydown', handleTextareaKeydown);
+        
+        initializeMagneticEffect();
 
     } catch (error) {
         console.error("Failed to commit entry:", error);
@@ -230,7 +236,7 @@ const renderHistoryView = (): void => {
         const committedTimestamp = new Date(todayEntry.timestamp).toLocaleString();
 
         historyHTML += `
-            <div class="history-entry today committed-entry">
+            <div class="history-entry today committed-entry" data-is-new="true">
                 <div class="history-date">${todayEntry.date}${todaySuffix}</div>
                 <div class="history-text">${escapeHtmlContent(todayEntry.text)}</div>
                 <div class="history-timestamp">${committedPrefix} ${committedTimestamp}</div>
@@ -276,6 +282,8 @@ const renderHistoryView = (): void => {
             return false;
         });
     });
+
+    initializeMagneticEffect();
 };
 
 
