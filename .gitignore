@@ -10,5 +10,4 @@
 /.env.local
 /.env.*.local
 /.vite
-package-lock.json
 /out
