@@ -1,0 +1,12 @@
+{
+  "appTitleImage": "./assets/application-logo.svg",
+  "todayPlaceholder": "JOURNAL D'EXÉCUTION",
+  "commitButtonText": "ENREGISTRER",
+  "historyTitle": "HISTORIQUE",
+  "noPreviousEntriesText": "aucune entrée précédente",
+  "committedNoticePrefix": "Enregistré à",
+  "todaySuffix": "(aujourd'hui)",
+  "languageLabel": "Langue",
+  "themeLabel": "Thème",
+  "themeOptions": { "system": "Système", "light": "Clair", "dark": "Sombre" }
+}

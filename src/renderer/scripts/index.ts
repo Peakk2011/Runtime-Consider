@@ -5,145 +5,493 @@ interface Entry {
     committed: boolean;
 }
 
-const today: string = new Date().toISOString().split("T")[0];
-let todayCommitted = false;
-let entries: Entry[] = [];
 
-const todayLabel = document.getElementById("todayLabel") as HTMLDivElement;
-const todayInput = document.getElementById("todayInput") as HTMLTextAreaElement;
-const commitBtn = document.getElementById("commitBtn") as HTMLButtonElement;
-const committedNotice = document.getElementById("committedNotice") as HTMLDivElement;
-const historyContainer = document.getElementById("historyContainer") as HTMLDivElement;
+interface I18nStrings {
+    appTitleImage?: string;
+    todayPlaceholder?: string;
+    commitButtonText?: string;
+    historyTitle?: string;
+    committedNoticePrefix?: string;
+    todaySuffix?: string;
+    noPreviousEntriesText?: string;
+    immutableBadge?: string;
+    commitWarning?: string;
+    languageLabel?: string;
+    themeLabel?: string;
+}
 
-todayLabel.textContent = today;
 
-const loadEntries = async (): Promise<void> => {
+interface AppConfig extends Record<string, unknown> {
+    language?: string;
+    theme?: string;
+}
+
+
+let translationStrings: I18nStrings = {};
+
+const DEFAULT_LANGUAGE = 'en';
+const SUPPORTED_LANGUAGES = ['en', 'th', 'es', 'ja', 'fr'];
+
+const todayDateString: string = new Date().toISOString().split("T")[0];
+let isTodayCommitted = false;
+let allEntries: Entry[] = [];
+
+
+const todayDateLabel = document.getElementById("todayLabel") as HTMLDivElement;
+const todayTextInput = document.getElementById("todayInput") as HTMLTextAreaElement;
+const commitButton = document.getElementById("commitBtn") as HTMLButtonElement;
+const committedStatusNotice = document.getElementById("committedNotice") as HTMLDivElement;
+const historyEntriesContainer = document.getElementById("historyContainer") as HTMLDivElement;
+
+const appTitleImage = document.querySelector('.app-title img') as HTMLImageElement | null;
+const historyTitleElement = document.querySelector('.history-title') as HTMLDivElement | null;
+
+
+const applyTranslations = (): void => {
+    if (!translationStrings) {
+        return;
+    }
+
+    if (appTitleImage && translationStrings.appTitleImage) {
+        appTitleImage.src = translationStrings.appTitleImage;
+    }
+
+    if (translationStrings.todayPlaceholder) {
+        todayTextInput.placeholder = translationStrings.todayPlaceholder;
+    }
+
+    if (translationStrings.commitButtonText) {
+        const buttonTextSpan = commitButton.querySelector('span');
+        if (buttonTextSpan) {
+            buttonTextSpan.textContent = translationStrings.commitButtonText;
+        }
+    }
+
+    if (historyTitleElement && translationStrings.historyTitle) {
+        historyTitleElement.textContent = translationStrings.historyTitle;
+    }
+};
+
+
+const loadTranslations = async (languageCode: string): Promise<void> => {
+    const selectedLanguage = SUPPORTED_LANGUAGES.includes(languageCode) 
+        ? languageCode 
+        : DEFAULT_LANGUAGE;
+
     try {
-        const allEntryFiles = await window.electron.storage.getAllEntries();
-        const entryDates = allEntryFiles.map((file) => file.replace(".json", ""));
+        const translationModule = await import(`../i18n/${selectedLanguage}.json`);
+        translationStrings = translationModule?.default 
+            ? translationModule.default 
+            : translationModule;
+        applyTranslations();
+    } catch (error) {
+        console.error('Failed to load translations', error);
+    }
+};
 
-        // Load all entries
-        const loadedEntries = await Promise.all(
-            entryDates.map(async (date) => {
-                try {
-                    const data = await window.electron.storage.getEntry(date);
-                    return data ? (data as Entry) : null;
-                } catch {
-                    return null;
-                }
-            })
-        );
 
-        entries = loadedEntries
-            .filter((e): e is Entry => e !== null)
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+todayDateLabel.textContent = todayDateString;
 
-        const todayEntry = entries.find((e) => e.date === today);
+
+const loadAllEntries = async (): Promise<void> => {
+    try {
+        const entryFileNames = await window.electron.storage.getAllEntries();
+        const entryDates = entryFileNames.map((fileName) => fileName.replace(".json", ""));
+
+        const loadedEntryPromises = entryDates.map(async (dateString) => {
+            try {
+                const entryData = await window.electron.storage.getEntry(dateString);
+                return entryData ? (entryData as Entry) : null;
+            } catch {
+                return null;
+            }
+        });
+
+        const loadedEntries = await Promise.all(loadedEntryPromises);
+
+        allEntries = loadedEntries
+            .filter((entry): entry is Entry => entry !== null)
+            .sort((entryA, entryB) => {
+                return new Date(entryB.date).getTime() - new Date(entryA.date).getTime();
+            });
+
+        const todayEntry = allEntries.find((entry) => entry.date === todayDateString);
+
         if (todayEntry) {
-            todayInput.style.display = "none";
-            todayInput.disabled = true;
-            commitBtn.disabled = true;
-            commitBtn.style.display = "none";
-            todayCommitted = true;
-            committedNotice.style.display = "block";
-            committedNotice.textContent = `Committed at ${new Date(todayEntry.timestamp).toLocaleTimeString()}`;
+            todayTextInput.value = todayEntry.text;
+            todayTextInput.disabled = true;
+            todayTextInput.readOnly = true;
+            todayTextInput.style.cursor = 'not-allowed';
+            todayTextInput.style.opacity = '0.6';
+            
+            commitButton.disabled = true;
+            commitButton.style.display = "none";
+            
+            isTodayCommitted = true;
+            committedStatusNotice.style.display = "block";
+
+            const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed at';
+            const committedTime = new Date(todayEntry.timestamp).toLocaleTimeString();
+            committedStatusNotice.textContent = `${committedPrefix} ${committedTime}`;
         } else {
-            todayInput.focus();
+            todayTextInput.focus();
         }
 
-        renderHistory();
+        renderHistoryView();
+
     } catch (error) {
         console.error("Failed to load entries:", error);
-        todayInput.focus();
+        todayTextInput.focus();
     }
-}
+};
 
-const autoExpand = (element: HTMLTextAreaElement): void => {
-    element.style.height = "auto";
-    element.style.height = Math.min(element.scrollHeight, 400) + "px";
-}
 
-const handleCommit = async (): Promise<void> => {
-    if (!todayInput.value.trim() || todayCommitted) return;
+const autoExpandTextarea = (textareaElement: HTMLTextAreaElement): void => {
+    textareaElement.style.height = "auto";
+    const newHeight = Math.min(textareaElement.scrollHeight, 400);
+    textareaElement.style.height = `${newHeight}px`;
+};
 
-    const entry: Entry = {
-        date: today,
-        text: todayInput.value.trim(),
+
+const handleCommitEntry = async (): Promise<void> => {
+    const trimmedText = todayTextInput.value.trim();
+
+    if (!trimmedText || isTodayCommitted) {
+        return;
+    }
+
+    const warningMessage = translationStrings?.commitWarning || 
+        'WARNING: This action is PERMANENT and IRREVERSIBLE.\n\n' +
+        'Once committed, this entry cannot be edited, modified, or deleted.\n' +
+        'The text will be locked forever.\n\n' +
+        'Are you absolutely sure you want to commit?';
+    
+    const userConfirmed = confirm(warningMessage);
+    
+    if (!userConfirmed) {
+        return;
+    }
+
+    const newEntry: Entry = {
+        date: todayDateString,
+        text: trimmedText,
         timestamp: new Date().toISOString(),
         committed: true,
     };
 
     try {
-        await window.electron.storage.saveEntry(today, entry.text);
+        await window.electron.storage.saveEntry(todayDateString, newEntry.text);
 
-        todayInput.style.display = "none";
-        todayInput.disabled = true;
-        commitBtn.disabled = true;
-        commitBtn.style.display = "none";
-        todayCommitted = true;
-        committedNotice.style.display = "block";
-        committedNotice.textContent = `Committed at ${new Date(entry.timestamp).toLocaleTimeString()}`;
+        todayTextInput.disabled = true;
+        todayTextInput.readOnly = true;
+        todayTextInput.style.cursor = 'not-allowed';
+        todayTextInput.style.opacity = '0.6';
+        
+        commitButton.disabled = true;
+        commitButton.style.display = "none";
+        
+        isTodayCommitted = true;
+        committedStatusNotice.style.display = "block";
 
-        entries.unshift(entry);
-        entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        renderHistory();
+        const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed at';
+        const committedTime = new Date(newEntry.timestamp).toLocaleTimeString();
+        committedStatusNotice.textContent = `${committedPrefix} ${committedTime}`;
+
+        allEntries.unshift(newEntry);
+        allEntries.sort((entryA, entryB) => {
+            return new Date(entryB.date).getTime() - new Date(entryA.date).getTime();
+        });
+
+        renderHistoryView();
+
+        todayTextInput.removeEventListener('input', handleTextareaInput);
+        todayTextInput.removeEventListener('keydown', handleTextareaKeydown);
+
     } catch (error) {
         console.error("Failed to commit entry:", error);
         alert("Failed to commit. Please try again.");
     }
-}
+};
 
-const renderHistory = (): void => {
-    const historyEntries = entries.filter(e => e.date !== today);
 
-    let html = "";
+const renderHistoryView = (): void => {
+    const previousEntries = allEntries.filter(entry => entry.date !== todayDateString);
 
-    const todayEntry = entries.find(e => e.date === today);
+    let historyHTML = "";
+
+    const todayEntry = allEntries.find(entry => entry.date === todayDateString);
+
     if (todayEntry) {
-        html += `
-          <div class="history-entry today">
-            <div class="history-date">${todayEntry.date} (today)</div>
-            <div class="history-text">${escapeHtml(todayEntry.text)}</div>
-            <div class="history-timestamp">Committed ${new Date(todayEntry.timestamp).toLocaleString()}</div>
-          </div>
+        const todaySuffix = translationStrings?.todaySuffix 
+            ? ` ${translationStrings.todaySuffix}` 
+            : ' (today)';
+
+        const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed';
+        const committedTimestamp = new Date(todayEntry.timestamp).toLocaleString();
+
+        historyHTML += `
+            <div class="history-entry today committed-entry">
+                <div class="history-date">${todayEntry.date}${todaySuffix}</div>
+                <div class="history-text">${escapeHtmlContent(todayEntry.text)}</div>
+                <div class="history-timestamp">${committedPrefix} ${committedTimestamp}</div>
+            </div>
         `;
     }
 
-    if (historyEntries.length === 0) {
-        html += '<div class="history-empty">no previous entries</div>';
+    if (previousEntries.length === 0) {
+        const emptyMessage = translationStrings?.noPreviousEntriesText || 'no previous entries';
+        historyHTML += `<div class="history-empty">${emptyMessage}</div>`;
     } else {
-        html += historyEntries.map(entry => `
-            <div class="history-entry">
-              <div class="history-date">${entry.date}</div>
-              <div class="history-text">${escapeHtml(entry.text)}</div>
-              <div class="history-timestamp">Committed ${new Date(entry.timestamp).toLocaleString()}</div>
-            </div>
-        `).join('');
+        const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed';
+        const immutableBadgeText = translationStrings?.immutableBadge || '';
+
+        const previousEntriesHTML = previousEntries.map(entry => {
+            const entryTimestamp = new Date(entry.timestamp).toLocaleString();
+
+            return `
+                <div class="history-entry committed-entry">
+                    <div class="history-date">${entry.date}</div>
+                    <div class="history-text">${escapeHtmlContent(entry.text)}</div>
+                    <div class="history-timestamp">${committedPrefix} ${entryTimestamp}</div>
+                    <div class="immutable-badge">${immutableBadgeText}</div>
+                </div>
+            `;
+        }).join('');
+
+        historyHTML += previousEntriesHTML;
     }
 
-    historyContainer.innerHTML = html;
-}
+    historyEntriesContainer.innerHTML = historyHTML;
 
-const escapeHtml = (text: string): string => {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
+    const allHistoryEntries = historyEntriesContainer.querySelectorAll('.history-entry');
 
-// Export renderHistory globally
-(window as any).renderHistory = renderHistory;
+    allHistoryEntries.forEach((entryElement) => {
+        entryElement.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            return false;
+        });
 
-commitBtn.addEventListener("click", handleCommit);
+        entryElement.addEventListener('dblclick', (event) => {
+            event.preventDefault();
+            return false;
+        });
+    });
+};
 
-todayInput.addEventListener("keydown", (e: KeyboardEvent) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        handleCommit();
+
+const escapeHtmlContent = (textContent: string): string => {
+    const temporaryDiv = document.createElement("div");
+    temporaryDiv.textContent = textContent;
+    return temporaryDiv.innerHTML;
+};
+
+
+const handleTextareaInput = (): void => {
+    if (!isTodayCommitted) {
+        autoExpandTextarea(todayTextInput);
     }
+};
+
+
+const handleTextareaKeydown = (event: KeyboardEvent): void => {
+    const isCommitShortcut = (event.metaKey || event.ctrlKey) && event.key === "Enter";
+
+    if (isCommitShortcut) {
+        handleCommitEntry();
+    }
+};
+
+
+commitButton.addEventListener("click", handleCommitEntry);
+todayTextInput.addEventListener("keydown", handleTextareaKeydown);
+todayTextInput.addEventListener("input", handleTextareaInput);
+
+
+loadAllEntries();
+
+
+const applyThemePreference = (themePreference: string | undefined): void => {
+    if (!themePreference || themePreference === 'system') {
+        document.documentElement.removeAttribute('data-theme');
+    } else if (themePreference === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    } else if (themePreference === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+    }
+};
+
+
+const createHamburgerMenu = async (): Promise<void> => {
+    const headerElement = document.querySelector('.header');
+
+    if (!headerElement) {
+        return;
+    }
+
+    const menuContainer = document.createElement('div');
+    menuContainer.className = 'hamburger-menu-container';
+
+    const hamburgerButton = document.createElement('button');
+    hamburgerButton.className = 'hamburger-button';
+    hamburgerButton.setAttribute('aria-label', 'Menu');
+    hamburgerButton.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-text-1-default)" stroke-width="2" stroke-linecap="butt" stroke-linejoin="butt">
+            <line x1="3" y1="5" x2="21" y2="5"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="19" x2="21" y2="19"></line>
+        </svg>
+    `;
+
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'dropdown-menu';
+    dropdownMenu.style.display = 'none';
+
+    const languageSelectorLabel = document.createElement('label');
+    const languageSelectElement = document.createElement('select');
+    languageSelectorLabel.className = 'menu-item-label';
+
+    for (const languageCode of SUPPORTED_LANGUAGES) {
+        const optionElement = document.createElement('option');
+        optionElement.value = languageCode;
+        optionElement.textContent = languageCode.toUpperCase();
+        languageSelectElement.appendChild(optionElement);
+    }
+
+    const languageLabelText = document.createElement('span');
+    languageLabelText.textContent = 'Language: ';
+    languageSelectorLabel.appendChild(languageLabelText);
+    languageSelectorLabel.appendChild(languageSelectElement);
+
+    const themeSelectorLabel = document.createElement('label');
+    const themeSelectElement = document.createElement('select');
+    themeSelectorLabel.className = 'menu-item-label';
+
+    const themeOptions = ['system', 'light', 'dark'];
+
+    for (const themeOption of themeOptions) {
+        const optionElement = document.createElement('option');
+        optionElement.value = themeOption;
+        optionElement.textContent = themeOption[0].toUpperCase() + themeOption.slice(1);
+        themeSelectElement.appendChild(optionElement);
+    }
+
+    const themeLabelText = document.createElement('span');
+    themeLabelText.textContent = 'Theme: ';
+    themeSelectorLabel.appendChild(themeLabelText);
+    themeSelectorLabel.appendChild(themeSelectElement);
+
+    dropdownMenu.appendChild(languageSelectorLabel);
+    dropdownMenu.appendChild(themeSelectorLabel);
+
+    menuContainer.appendChild(hamburgerButton);
+    menuContainer.appendChild(dropdownMenu);
+    headerElement.appendChild(menuContainer);
+
+    let isMenuOpen = false;
+
+    const toggleMenu = (): void => {
+        isMenuOpen = !isMenuOpen;
+        dropdownMenu.style.display = isMenuOpen ? 'block' : 'none';
+    };
+
+    hamburgerButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleMenu();
+    });
+
+    document.addEventListener('click', (event) => {
+        const target = event.target as Node;
+        if (isMenuOpen && !menuContainer.contains(target)) {
+            isMenuOpen = false;
+            dropdownMenu.style.display = 'none';
+        }
+    });
+
+    try {
+        const currentConfig = await window.electron.config.getConfig() as AppConfig | null;
+        
+        const savedLanguage = currentConfig?.language || DEFAULT_LANGUAGE;
+        const savedTheme = currentConfig?.theme || 'system';
+
+        languageSelectElement.value = SUPPORTED_LANGUAGES.includes(savedLanguage) 
+            ? savedLanguage 
+            : DEFAULT_LANGUAGE;
+
+        themeSelectElement.value = themeOptions.includes(savedTheme) 
+            ? savedTheme 
+            : 'system';
+
+        await loadTranslations(languageSelectElement.value);
+        applyThemePreference(themeSelectElement.value);
+
+    } catch (error) {
+        await loadTranslations(DEFAULT_LANGUAGE);
+        applyThemePreference('system');
+    }
+
+    const saveUserConfig = async (
+        newLanguage?: string, 
+        newTheme?: string
+    ): Promise<void> => {
+        try {
+            const currentConfig = await window.electron.config.getConfig() as AppConfig | null;
+            const updatedConfig: AppConfig = currentConfig || {};
+
+            if (newLanguage) {
+                updatedConfig.language = newLanguage;
+            }
+
+            if (newTheme) {
+                updatedConfig.theme = newTheme;
+            }
+
+            await window.electron.config.saveConfig(updatedConfig);
+        } catch (error) {
+            console.error('Failed to save configuration', error);
+        }
+    };
+
+    languageSelectElement.addEventListener('change', async () => {
+        const selectedLanguage = languageSelectElement.value;
+        await loadTranslations(selectedLanguage);
+        await saveUserConfig(selectedLanguage, undefined);
+        renderHistoryView();
+
+        if (translationStrings.languageLabel) {
+            languageLabelText.textContent = `${translationStrings.languageLabel}: `;
+        }
+    });
+
+    themeSelectElement.addEventListener('change', async () => {
+        const selectedTheme = themeSelectElement.value;
+        applyThemePreference(selectedTheme);
+        await saveUserConfig(undefined, selectedTheme);
+    });
+
+    if (translationStrings.languageLabel) {
+        languageLabelText.textContent = `${translationStrings.languageLabel}: `;
+    }
+
+    if (translationStrings.themeLabel) {
+        themeLabelText.textContent = `${translationStrings.themeLabel}: `;
+    }
+};
+
+
+if (process.env.NODE_ENV === 'production') {
+    document.addEventListener('keydown', (event) => {
+        const isDevToolsShortcut = 
+            event.key === 'F12' ||
+            (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key.toUpperCase()));
+
+        if (isDevToolsShortcut) {
+            event.preventDefault();
+            return false;
+        }
+    });
+}
+
+
+createHamburgerMenu().catch((error) => {
+    console.error('Failed to create hamburger menu', error);
 });
-
-todayInput.addEventListener("input", () => { autoExpand(todayInput); });
-
-loadEntries();
-
-// Import dev-functions after all functions are defined
-import './dev-functions';

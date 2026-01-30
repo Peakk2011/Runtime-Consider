@@ -1,0 +1,12 @@
+{
+  "appTitleImage": "./assets/application-logo.svg",
+  "todayPlaceholder": "EXECUTION LOG",
+  "commitButtonText": "COMMIT",
+  "historyTitle": "HISTORY",
+  "noPreviousEntriesText": "no previous entries",
+  "committedNoticePrefix": "Committed at",
+  "todaySuffix": "(today)",
+  "languageLabel": "Language",
+  "themeLabel": "Theme",
+  "themeOptions": { "system": "System", "light": "Light", "dark": "Dark" }
+}

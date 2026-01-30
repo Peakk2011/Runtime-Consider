@@ -1,0 +1,12 @@
+{
+  "appTitleImage": "./assets/application-logo.svg",
+  "todayPlaceholder": "REGISTRO DE EJECUCIÓN",
+  "commitButtonText": "GUARDAR",
+  "historyTitle": "HISTORIAL",
+  "noPreviousEntriesText": "sin entradas previas",
+  "committedNoticePrefix": "Guardado a las",
+  "todaySuffix": "(hoy)",
+  "languageLabel": "Idioma",
+  "themeLabel": "Tema",
+  "themeOptions": { "system": "Sistema", "light": "Claro", "dark": "Oscuro" }
+}

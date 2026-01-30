@@ -1,0 +1,12 @@
+{
+  "appTitleImage": "./assets/application-logo.svg",
+  "todayPlaceholder": "実行ログ",
+  "commitButtonText": "保存",
+  "historyTitle": "履歴",
+  "noPreviousEntriesText": "前のエントリはありません",
+  "committedNoticePrefix": "保存日時",
+  "todaySuffix": "(今日)",
+  "languageLabel": "言語",
+  "themeLabel": "テーマ",
+  "themeOptions": { "system": "システム", "light": "ライト", "dark": "ダーク" }
+}

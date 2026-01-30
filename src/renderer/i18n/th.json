@@ -1,0 +1,12 @@
+{
+  "appTitleImage": "./assets/application-logo.svg",
+  "todayPlaceholder": "บันทึกการทำงาน",
+  "commitButtonText": "บันทึก",
+  "historyTitle": "ประวัติ",
+  "noPreviousEntriesText": "ไม่มีรายการก่อนหน้า",
+  "committedNoticePrefix": "บันทึกเมื่อ",
+  "todaySuffix": "(วันนี้)",
+  "languageLabel": "ภาษา",
+  "themeLabel": "ธีม",
+  "themeOptions": { "system": "ตามระบบ", "light": "สว่าง", "dark": "มืด" }
+}
