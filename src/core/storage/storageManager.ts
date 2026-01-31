@@ -371,6 +371,42 @@ export class StorageManager {
             backupsDir: this.backupsDir,
         };
     }
+
+    /**
+     * DANGER อันตราย
+     * 
+     * Deletes all user data permanently. This is for development purposes only.
+     * This will delete the entire storage directory.
+     * The application should be restarted after this operation.
+     */
+    public async deleteAllData(): Promise<void> {
+        if (process.env.NODE_ENV !== 'development') {
+            logger.error("deleteAllData can only be called in development mode.");
+            return;
+        }
+
+        // Close any open resources if necessary.
+        // In this class, there aren't any persistent handles except for locks,
+        // but those are transient.
+
+        try {
+            const { baseDir } = this.getStorageInfo();
+            logger.warn(`Deleting all data in ${baseDir}`);
+            await fsPromises.rm(baseDir, { recursive: true, force: true });
+            logger.info("All data has been deleted.");
+
+            // After deletion, we should re-initialize the directories
+            // or instruct the user to restart the app.
+            // Re-initializing seems appropriate.
+            this.initializeDirectories();
+
+            StorageManager.clearInstanceForTests();
+
+        } catch (error) {
+            logger.error("Failed to delete all data.", error);
+            throw error;
+        }
+    }
 }
 
 /**

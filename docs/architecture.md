@@ -118,8 +118,7 @@ src/
 ├── renderer/
 │   ├── renderer.ts                        # Renderer process setup
 │   ├── scripts/                           # Frontend scripts
-│   │   ├── index.ts                       # Main renderer logic
-│   │   └── dev-functions.ts               # Development utilities
+│   │   └── index.ts                       # Main renderer logic
 │   └── stylesheet/                        # UI styling
 │       ├── index.css                      # Main styles
 │       ├── variables.css                  # CSS variables & theme

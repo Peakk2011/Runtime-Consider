@@ -37,6 +37,25 @@
     fill: var(--theme-text-1-default) !important;
 }
 
+.hamburger-button svg line {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transform-origin: center;
+}
+
+/* Transform hamburger to X when menu is open */
+.hamburger-button.active svg line:nth-child(1) {
+    transform: translate(-2px, 3px) rotate(45deg);
+}
+
+.hamburger-button.active svg line:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.hamburger-button.active svg line:nth-child(3) {
+    transform: translate(-2px, -7px) rotate(-45deg);
+}
+
 /* Dropdown Menu */
 .dropdown-menu {
     position: absolute;
@@ -45,10 +64,22 @@
     background: var(--theme-bg-2-default);
     border: 1px solid var(--theme-border-1-default);
     z-index: 10;
-
     left: 12px;
     box-shadow: var(--shadow);
 
+    /* Scale + Slide animation with bounce - slower for visibility */
+    transform-origin: top left;
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+    pointer-events: none;
+    transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Menu open state */
+.dropdown-menu.show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
 }
 
 /* Menu Item Label */
@@ -61,7 +92,39 @@
     font-size: 13px;
     color: var(--theme-text-2-default);
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.10s ease;
+
+    /* Stagger animation - slide in from top (Y axis) */
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+/* Animate items when menu opens */
+.dropdown-menu.show .menu-item-label {
+    animation: menuItemSlideIn 250ms ease forwards;
+}
+
+.dropdown-menu.show .menu-item-label:nth-child(1) {
+    animation-delay: 0.08s;
+}
+
+.dropdown-menu.show .menu-item-label:nth-child(2) {
+    animation-delay: 0.14s;
+}
+
+.dropdown-menu.show .menu-item-label:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.dropdown-menu.show .menu-item-label:nth-child(4) {
+    animation-delay: 0.26s;
+}
+
+@keyframes menuItemSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .menu-item-label:hover {
@@ -74,22 +137,18 @@
     letter-spacing: 0.2px;
 }
 
-
 /* Menu Select Elements */
 .menu-item-label select {
-    padding: 4px 8px;
+    padding: 4px 4px;
     font-size: 12px;
     font-family: inherit;
-    /* background: var(--theme-bg-3-default); */
     background: transparent;
     color: var(--theme-text-1-default);
-    /* border: 1px solid var(--theme-border-1-default); */
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
     outline: none;
-    min-width: 80px;
-
+    min-width: 100px;
     text-align: right;
 }
 
@@ -98,10 +157,52 @@
     color: var(--theme-text-1-default);
 }
 
-
 /* Menu Divider */
 .menu-divider {
     height: 1px;
     margin: 8px 0;
     background: var(--theme-border-1-default);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+}
+
+/* Animate divider when menu opens */
+.dropdown-menu.show .menu-divider {
+    animation: dividerExpand 0.3s ease forwards;
+    animation-delay: 0.1s;
+}
+
+@keyframes dividerExpand {
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+/* Exit Button */
+.menu-exit-button {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.65rem;
+    text-align: left;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateY(-5px);
+    font-family: inherit;
+
+    background-color: transparent;
+    color: var(--theme-text-2-default);
+}
+
+.menu-exit-button:hover {
+    background: var(--theme-bg-4-hover);
+}
+
+.dropdown-menu.show .menu-exit-button {
+    animation: menuItemSlideIn 250ms ease forwards;
+    animation-delay: 0.32s;
 }

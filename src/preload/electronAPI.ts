@@ -25,10 +25,15 @@ export interface LoggerAPI {
     error(message: string, error?: Record<string, unknown>): void;
 }
 
+export interface AppAPI {
+    exit(): void;
+}
+
 export interface ElectronAPI {
     storage: StorageAPI;
     config: ConfigAPI;
     logger: LoggerAPI;
+    app: AppAPI;
 }
 
 /**
@@ -70,12 +75,22 @@ const loggerAPI: LoggerAPI = {
 };
 
 /**
+ * App API - Exposed via contextBridge
+ */
+const appAPI: AppAPI = {
+    exit: () => {
+        ipcRenderer.send("app:exit");
+    },
+};
+
+/**
  * Expose safe APIs to renderer process via contextBridge
  */
 contextBridge.exposeInMainWorld("electron", {
     storage: storageAPI,
     config: configAPI,
     logger: loggerAPI,
+    app: appAPI,
 } as ElectronAPI);
 
 /**

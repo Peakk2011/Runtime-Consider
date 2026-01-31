@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, app } from "electron";
 import { getStorage } from "@core/storage/storageManager";
 import { validateEntry , validateAppConfig } from "@core/storage/schema";
 import { logger } from "@utils/logger";
@@ -215,6 +215,13 @@ export const registerIPCHandlers = (): void => {
 
     ipcMain.on("logger:error", (_event, { message, error }) => {
         logger.error(message, error);
+    });
+
+    // App Handlers
+
+    ipcMain.on("app:exit", () => {
+        logger.info("App exit requested from renderer");
+        app.quit();
     });
 
     logger.info("IPC handlers registered");

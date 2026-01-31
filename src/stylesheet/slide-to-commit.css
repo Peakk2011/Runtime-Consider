@@ -1,0 +1,263 @@
+/* Slide to Commit Modal */
+
+.commit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 15, 15, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.commit-modal-overlay.show {
+    opacity: 1;
+}
+
+.commit-modal-overlay.fade-out {
+    opacity: 0;
+}
+
+.commit-modal {
+    width: 90%;
+    padding: 18px 20px 18px;
+    max-width: 300px;
+    opacity: 0;
+    transition: all 600ms cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.commit-modal-overlay.show .commit-modal {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.commit-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--theme-text-1-default);
+    margin: 0 0 12px 0;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+.commit-modal-message {
+    font-size: 14px;
+    color: var(--theme-text-2-default);
+    margin: 0 0 28px 0;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Slide to Commit Container */
+.slide-to-commit-container {
+    margin-bottom: 0.8rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide-track {
+    position: relative;
+    width: 230px;
+    height: 52px;
+    background: var(--theme-bg-3-default);
+    border-radius: 28px;
+    overflow: visible;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.3s ease;
+    border: 1px solid var(--theme-border-2-default);
+    margin: auto;
+}
+
+.slide-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-40%, -50%);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--theme-text-2-default);
+    letter-spacing: -0.3px;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    animation: typewriter 600ms steps(20) forwards;
+}
+
+@keyframes typewriter {
+    0% {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+.slide-button {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 42px;
+    height: 42px;
+    color: var(--theme-accent-default-text);
+    background: var(--theme-accent-default);
+    border: solid 2px var(--theme-accent-default-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: box-shadow 0.2s ease;
+}
+
+.slide-button:active,
+.slide-button.dragging {
+    cursor: grabbing;
+    box-shadow: var(--shadow);
+}
+
+.slide-button.success {
+    background: var(--theme-accent-1-default);
+    color: var(--theme-text-1-default);
+    animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.slide-button svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
+
+.slide-button.dragging svg {
+    transform: scale(1.1);
+}
+
+.slide-button.success svg {
+    animation: checkmark 0.5s ease;
+}
+
+@keyframes checkmark {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+/* Encouragement Emoji */
+.encouragement-emoji {
+    position: absolute;
+    top: 60px;
+    left: 0px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    background: var(--theme-bg-2-default);
+    border: 1px solid var(--theme-border-1-default);
+    border-radius: 100vmax;
+    padding: 6px 12px 6px 8px;
+
+    transition: none;
+    will-change: transform, opacity;
+}
+
+.encouragement-emoji.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.emoji-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.emoji-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--theme-text-1-default);
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+}
+
+/* Cancel Button */
+.commit-modal-cancel {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--theme-bg-3-default);
+    border: 1px solid var(--theme-border-2-default);
+    border-radius: 100vmax;
+    font-size: 14.5px;
+    font-weight: 600;
+    font-family: 'GeistMono', 'Anuphan', 'Leelawadee', monospace;
+    line-height: 0.8;
+    color: var(--theme-text-1-default);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: none;
+}
+
+.commit-modal-cancel:hover {
+    background: var(--theme-bg-4-hover);
+    border-color: var(--theme-border-1-default);
+}
+
+.commit-modal-cancel:active {
+    transform: scale(0.95);
+}
+
+/* Haptic feedback effect (visual) */
+.slide-button.dragging {
+    animation: hapticBounce 0.1s ease;
+}
+
+@keyframes hapticBounce {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
