@@ -6,7 +6,11 @@ import { loadAllEntries, saveEntry, getTodayEntry } from './storage';
 import { renderHistoryView, autoExpandTextarea, updateTodayUI } from './ui';
 import { createHamburgerMenu } from './menu';
 import { showSlideToCommitModal } from './slide-to-commit';
-import { getStorage } from '@/core/storage/storageManager';
+// import { getStorage } from '@/core/storage/storageManager';
+
+window.electron.app.getOS().then(os => {
+    document.body.classList.add(`os-${os}`);
+}).catch(console.error);
 
 // Application state
 let isTodayCommitted = false;

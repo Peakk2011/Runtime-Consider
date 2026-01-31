@@ -224,5 +224,9 @@ export const registerIPCHandlers = (): void => {
         app.quit();
     });
 
+    ipcMain.handle('app:getOS', () => {
+        return process.platform;
+    });
+
     logger.info("IPC handlers registered");
 };

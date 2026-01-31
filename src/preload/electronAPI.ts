@@ -27,6 +27,7 @@ export interface LoggerAPI {
 
 export interface AppAPI {
     exit(): void;
+    getOS(): Promise<string>;
 }
 
 export interface ElectronAPI {
@@ -81,6 +82,7 @@ const appAPI: AppAPI = {
     exit: () => {
         ipcRenderer.send("app:exit");
     },
+    getOS: () => ipcRenderer.invoke("app:getOS"),
 };
 
 /**
