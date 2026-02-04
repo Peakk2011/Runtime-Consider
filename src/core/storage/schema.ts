@@ -29,6 +29,7 @@ export type Manifest = z.infer<typeof ManifestSchema>;
  * Schema for application configuration
  */
 export const AppConfigSchema = z.object({
+    language: z.string().default("en"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
     timeFormat: z.enum(["12h", "24h"]).default("24h"),
     autoBackup: z.boolean().default(true),

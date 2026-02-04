@@ -27,12 +27,16 @@ export const renderHistoryView = (): void => {
     const todayEntry = getTodayEntry();
 
     if (todayEntry) {
-        const todaySuffix = translationStrings?.todaySuffix 
-            ? ` ${translationStrings.todaySuffix}` 
-            : ' (today)';
+        const todaySuffix = translationStrings?.todaySuffix
+            ? ` ${escapeHtmlContent(translationStrings.todaySuffix)}`
+            : " (today)";
 
-        const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed';
-        const committedTimestamp = new Date(todayEntry.timestamp).toLocaleString();
+        const committedPrefix = escapeHtmlContent(
+            translationStrings?.committedNoticePrefix || "Committed"
+        );
+        const committedTimestamp = escapeHtmlContent(
+            new Date(todayEntry.timestamp).toLocaleString()
+        );
 
         historyHTML += `
             <div class="history-entry today committed-entry" data-is-new="true">
@@ -44,14 +48,22 @@ export const renderHistoryView = (): void => {
     }
 
     if (previousEntries.length === 0) {
-        const emptyMessage = translationStrings?.noPreviousEntriesText || 'no previous entries';
+        const emptyMessage = escapeHtmlContent(
+            translationStrings?.noPreviousEntriesText || "no previous entries"
+        );
         historyHTML += `<div class="history-empty">${emptyMessage}</div>`;
     } else {
-        const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed';
-        const immutableBadgeText = translationStrings?.immutableBadge || '';
+        const committedPrefix = escapeHtmlContent(
+            translationStrings?.committedNoticePrefix || "Committed"
+        );
+        const immutableBadgeText = escapeHtmlContent(
+            translationStrings?.immutableBadge || ""
+        );
 
         const previousEntriesHTML = previousEntries.map(entry => {
-            const entryTimestamp = new Date(entry.timestamp).toLocaleString();
+            const entryTimestamp = escapeHtmlContent(
+                new Date(entry.timestamp).toLocaleString()
+            );
 
             return `
                 <div class="history-entry committed-entry">
@@ -113,6 +125,6 @@ export const applyThemePreference = (themePreference: string | undefined): void 
     } else if (themePreference === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
     } else if (themePreference === 'dark') {
-        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', 'dark');
     }
 };

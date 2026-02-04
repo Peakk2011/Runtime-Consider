@@ -1,4 +1,4 @@
-import { ipcMain, app } from "electron";
+import { ipcMain, app, dialog } from "electron";
 import { getStorage } from "@core/storage/storageManager";
 import { validateEntry , validateAppConfig } from "@core/storage/schema";
 import { logger } from "@utils/logger";
@@ -133,22 +133,28 @@ export const registerIPCHandlers = (): void => {
     /**
      * Export all data
      */
-    ipcMain.handle("storage:exportData", async (_event, exportPath: string) => {
+    ipcMain.handle("storage:exportData", async (_event, suggestedFileName?: string) => {
         try {
-            if (!exportPath || !path.isAbsolute(exportPath)) {
-                throw new Error("Invalid export path");
-            }
-            
-            const dir = path.dirname(exportPath);
-            
-            try {
-                await fsPromises.access(dir);
-            } catch (err) {
-                throw new Error("Export directory does not exist or is not accessible");
+            const safeName = suggestedFileName
+                ? path.basename(suggestedFileName)
+                : `runtime-consider-export-${new Date().toISOString().slice(0, 10)}.json`;
+
+            const { canceled, filePath } = await dialog.showSaveDialog({
+                title: "Export Runtime Consider Data",
+                defaultPath: path.join(app.getPath("documents"), safeName),
+                filters: [{ name: "JSON", extensions: ["json"] }],
+            });
+
+            if (canceled || !filePath) {
+                logger.info("Export canceled");
+                return;
             }
 
-            await storage.exportData(exportPath);
-            logger.info("Data exported", { path: exportPath });
+            const dir = path.dirname(filePath);
+            await fsPromises.access(dir);
+
+            await storage.exportData(filePath);
+            logger.info("Data exported", { path: filePath });
         } catch (error) {
             logger.error("Failed to export data", error);
             throw error;

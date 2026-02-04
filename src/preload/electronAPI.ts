@@ -10,7 +10,7 @@ export interface StorageAPI {
     getEntry(date: string): Promise<{ date: string; text: string; timestamp: string } | null>;
     saveEntry(date: string, text: string): Promise<void>;
     deleteEntry(date: string): Promise<void>;
-    exportData(exportPath: string): Promise<void>;
+    exportData(suggestedFileName?: string): Promise<void>;
     createBackup(): Promise<string>;
 }
 
@@ -47,7 +47,8 @@ const storageAPI: StorageAPI = {
     getEntry: (date: string) => ipcRenderer.invoke("storage:getEntry", date),
     saveEntry: (date: string, text: string) => ipcRenderer.invoke("storage:saveEntry", date, text),
     deleteEntry: (date: string) => ipcRenderer.invoke("storage:deleteEntry", date),
-    exportData: (exportPath: string) => ipcRenderer.invoke("storage:exportData", exportPath),
+    exportData: (suggestedFileName?: string) =>
+        ipcRenderer.invoke("storage:exportData", suggestedFileName),
     createBackup: () => ipcRenderer.invoke("storage:createBackup"),
 };
 

@@ -1,5 +1,11 @@
 import { translationStrings } from './i18n';
 
+const escapeHtmlContent = (textContent: string): string => {
+    const temporaryDiv = document.createElement("div");
+    temporaryDiv.textContent = textContent;
+    return temporaryDiv.innerHTML;
+};
+
 export const createSlideToCommitModal = (onCommit: () => void): HTMLElement => {
     // Cleanup function
     let cleanupFns: Array<() => void> = [];
@@ -11,11 +17,25 @@ export const createSlideToCommitModal = (onCommit: () => void): HTMLElement => {
     const modal = document.createElement('div');
     modal.className = 'commit-modal';
 
-    const slideText = translationStrings?.slideToCommitText || 'Slide to Commit';
+    const slideText = escapeHtmlContent(
+        translationStrings?.slideToCommitText || "Slide to Commit"
+    );
+    const modalTitle = escapeHtmlContent(
+        translationStrings?.commitModalTitle || "Commit Entry"
+    );
+    const modalMessage = escapeHtmlContent(
+        translationStrings?.commitModalMessage || "This action is permanent and cannot be undone."
+    );
+    const encouragementInitial = escapeHtmlContent(
+        translationStrings?.encouragementKeepGoing || "Keep going!"
+    );
+    const cancelText = escapeHtmlContent(
+        translationStrings?.cancelButtonText || "Cancel"
+    );
 
     modal.innerHTML = `
-        <h3 class="commit-modal-title">${translationStrings?.commitModalTitle || 'Commit Entry'}</h3>
-        <p class="commit-modal-message">${translationStrings?.commitModalMessage || 'This action is permanent and cannot be undone.'}</p>
+        <h3 class="commit-modal-title">${modalTitle}</h3>
+        <p class="commit-modal-message">${modalMessage}</p>
         <div class="slide-to-commit-container">
             <div class="slide-track">
                 <span class="slide-text">${slideText}</span>
@@ -26,11 +46,11 @@ export const createSlideToCommitModal = (onCommit: () => void): HTMLElement => {
                 </div>
                 <div class="encouragement-emoji">
                     <div class="emoji-icon">💪</div>
-                    <div class="emoji-label">${translationStrings?.encouragementKeepGoing || 'Keep going!'}</div>
+                    <div class="emoji-label">${encouragementInitial}</div>
                 </div>
             </div>
         </div>
-        <button class="commit-modal-cancel">${translationStrings?.cancelButtonText || 'Cancel'}</button>
+        <button class="commit-modal-cancel">${cancelText}</button>
     `;
 
     overlay.appendChild(modal);
@@ -228,7 +248,7 @@ export const createSlideToCommitModal = (onCommit: () => void): HTMLElement => {
             currentX = maxSlide;
             updateUI(currentX);
             
-            const committedText = translationStrings?.commitFailedText || 'Committed!';
+            const committedText = translationStrings?.commitSuccessText || 'Committed!';
             sliderText.textContent = committedText;
             sliderButton.classList.add('success');
             
