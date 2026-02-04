@@ -89,6 +89,18 @@
         --theme-scrollbar-thumb-bg: #c0c0c0;
         --theme-scrollbar-track-bg: #f5f5f5;
     }
+
+    .app-title svg path:nth-child(1) {
+        fill: #000;
+    }
+
+    .app-title svg path:nth-child(2) {
+        fill: #6EA6CF;
+    }
+
+    .app-title svg path:nth-child(3) {
+        fill: #fe8f8d;
+    }
 }
 
 /* Manual Light Mode Toggle */
@@ -134,4 +146,16 @@
     --theme-accent-default: hsl(180, 6%, 10%);
     --theme-accent-default-text: hsl(180, 6%, 90%);
     --theme-accent-default-border: hsl(180, 6%, 70%);
+
+    .app-title svg path:nth-child(1) {
+        fill: #000;
+    }
+
+    .app-title svg path:nth-child(2) {
+        fill: #6EA6CF;
+    }
+
+    .app-title svg path:nth-child(3) {
+        fill: #fe8f8d;
+    }
 }

@@ -52,7 +52,7 @@
     left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--theme-text-1-default);
     pointer-events: none;
     animation: bounceDown 1s infinite;
     transition: opacity 0.2s ease, transform 0.2s ease;
