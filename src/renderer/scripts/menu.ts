@@ -143,11 +143,28 @@ export const createHamburgerMenu = async (): Promise<void> => {
             ? savedTheme 
             : 'system';
 
-        await loadTranslations(languageSelectElement.value);
+        // Defer translation loading to avoid blocking first paint
+        const loadLater = () => loadTranslations(languageSelectElement.value);
+        
+        if ("requestIdleCallback" in window) {
+            (window as Window & { requestIdleCallback?: (cb: () => void) => void })
+                .requestIdleCallback?.(loadLater);
+        } else {
+            setTimeout(loadLater, 0);
+        }
+
         applyThemePreference(themeSelectElement.value);
 
     } catch (error) {
-        await loadTranslations(DEFAULT_LANGUAGE);
+        const loadLater = () => loadTranslations(DEFAULT_LANGUAGE);
+
+        if ("requestIdleCallback" in window) {
+            (window as Window & { requestIdleCallback?: (cb: () => void) => void })
+                .requestIdleCallback?.(loadLater);
+        } else {
+            setTimeout(loadLater, 0);
+        }
+
         applyThemePreference('system');
     }
 

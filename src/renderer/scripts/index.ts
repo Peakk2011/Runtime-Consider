@@ -96,7 +96,7 @@ const handleTextareaKeydown = (event: KeyboardEvent): void => {
 // Initialize app
 const initializeApp = async (): Promise<void> => {
     try {
-        renderHistoryView({ initialLimit: 8, batchSize: 16 });
+        renderHistoryView({ initialLimit: 0, batchSize: 16, skipEffects: true });
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         await loadAllEntries();
 
@@ -109,7 +109,9 @@ const initializeApp = async (): Promise<void> => {
             todayTextInput.focus();
         }
 
-        renderHistoryView({ initialLimit: 12, batchSize: 20 });
+        runtimeConsiderIdle(() => {
+            renderHistoryView({ initialLimit: 12, batchSize: 20 });
+        });
 
     } catch (error) {
         console.error("Failed to initialize app:", error);
@@ -130,10 +132,21 @@ if (!commitButton || !todayTextInput) {
 // Start the app
 initializeApp();
 
-// Create hamburger menu
-createHamburgerMenu().catch((error) => {
-    console.error('Failed to create hamburger menu', error);
-    runtimeConsiderSafeMode("createHamburgerMenu failed", error);
+// Create hamburger menu (defer to idle)
+const runtimeConsiderIdle = (fn: () => void) => {
+    if ("requestIdleCallback" in window) {
+        (window as Window & { requestIdleCallback?: (cb: () => void) => void })
+            .requestIdleCallback?.(fn);
+    } else {
+        setTimeout(fn, 0);
+    }
+};
+
+runtimeConsiderIdle(() => {
+    createHamburgerMenu().catch((error) => {
+        console.error('Failed to create hamburger menu', error);
+        runtimeConsiderSafeMode("createHamburgerMenu failed", error);
+    });
 });
 
 if (process.env.NODE_ENV === 'production') {

@@ -4,6 +4,7 @@ import { validateEntry , validateAppConfig } from "@core/storage/schema";
 import { logger } from "@utils/logger";
 import * as path from "path";
 import { promises as fsPromises } from "fs";
+import { z } from "zod";
 
 /**
  * Register all IPC handlers for main process
@@ -11,6 +12,33 @@ import { promises as fsPromises } from "fs";
  */
 export const registerIPCHandlers = (): void => {
     const storage = getStorage();
+    const loggerRateLimit = new Map<number, { count: number; windowStart: number }>();
+
+    const LOG_WINDOW_MS = 10_000;
+    const LOG_MAX_PER_WINDOW = 200;
+
+    const stringSchema = z.string();
+    const optionalStringSchema = z.string().optional();
+    
+    const logPayloadSchema = z.object({
+        message: z.string().min(1).max(2000),
+        data: z.record(z.string(), z.unknown()).optional(),
+        error: z.unknown().optional(),
+    });
+
+    const configSchema = z.record(z.string(), z.unknown());
+
+    const allowLog = (senderId: number): boolean => {
+        const now = Date.now();
+        const existing = loggerRateLimit.get(senderId);
+        if (!existing || now - existing.windowStart > LOG_WINDOW_MS) {
+            loggerRateLimit.set(senderId, { count: 1, windowStart: now });
+            return true;
+        }
+        if (existing.count >= LOG_MAX_PER_WINDOW) return false;
+        existing.count += 1;
+        return true;
+    };
 
     // Storage Handlers
 
@@ -61,15 +89,20 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("storage:getEntry", async (_event, date: string) => {
         try {
+            stringSchema.parse(date);
+
             if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
                 throw new Error(`Invalid date format: ${date}`);
             }
+
             const entry = await storage.loadEntry(date);
+            
             if (entry) {
                 validateEntry(entry);
                 logger.info("Entry retrieved", { date });
                 return entry;
             }
+            
             return null;
         } catch (error) {
             logger.error(`Failed to get entry for date ${date}`, error);
@@ -83,6 +116,9 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("storage:saveEntry", async (_event, date: string, text: string) => {
         try {
+            stringSchema.parse(date);
+            stringSchema.parse(text);
+            
             if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
                 throw new Error(`Invalid date format: ${date}`);
             }
@@ -93,6 +129,7 @@ export const registerIPCHandlers = (): void => {
 
             // Check if entry already exists (immutability check)
             const existing = await storage.loadEntry(date);
+            
             if (existing) {
                 throw new Error(`Entry for ${date} already exists and cannot be modified`);
             }
@@ -119,9 +156,12 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("storage:deleteEntry", async (_event, date: string) => {
         try {
+            stringSchema.parse(date);
+            
             if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
                 throw new Error(`Invalid date format: ${date}`);
             }
+            
             await storage.deleteEntry(date);
             logger.warn("Entry deleted", { date });
         } catch (error) {
@@ -135,6 +175,8 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("storage:exportData", async (_event, suggestedFileName?: string) => {
         try {
+            optionalStringSchema.parse(suggestedFileName);
+            
             const safeName = suggestedFileName
                 ? path.basename(suggestedFileName)
                 : `runtime-consider-export-${new Date().toISOString().slice(0, 10)}.json`;
@@ -200,8 +242,11 @@ export const registerIPCHandlers = (): void => {
      */
     ipcMain.handle("config:saveConfig", async (_event, config: unknown) => {
         try {
+            configSchema.parse(config);
+            
             validateAppConfig(config);
             await storage.saveConfig(config);
+            
             logger.info("Config saved");
         } catch (error) {
             logger.error("Failed to save config", error);
@@ -211,16 +256,34 @@ export const registerIPCHandlers = (): void => {
 
     // Logger Handlers
 
-    ipcMain.on("logger:info", (_event, { message, data }) => {
-        logger.info(message, data);
+    ipcMain.on("logger:info", (event, payload) => {
+        try {
+            if (!allowLog(event.sender.id)) return;
+            const { message, data } = logPayloadSchema.parse(payload) as { message: string; data?: Record<string, unknown> };
+            logger.info(message, data);
+        } catch {
+            // ignore invalid logger
+        }
     });
 
-    ipcMain.on("logger:warn", (_event, { message, data }) => {
-        logger.warn(message, data);
+    ipcMain.on("logger:warn", (event, payload) => {
+        try {
+            if (!allowLog(event.sender.id)) return;
+            const { message, data } = logPayloadSchema.parse(payload) as { message: string; data?: Record<string, unknown> };
+            logger.warn(message, data);
+        } catch {
+            // ignore invalid logger
+        }
     });
 
-    ipcMain.on("logger:error", (_event, { message, error }) => {
-        logger.error(message, error);
+    ipcMain.on("logger:error", (event, payload) => {
+        try {
+            if (!allowLog(event.sender.id)) return;
+            const { message, error } = logPayloadSchema.parse(payload) as { message: string; error?: any };
+            logger.error(message, error);
+        } catch {
+            // ignore invalid logger
+        }
     });
 
     // App Handlers

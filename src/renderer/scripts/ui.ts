@@ -10,6 +10,8 @@ let historyObserver: IntersectionObserver | null = null;
 let historyRenderedCount = 0;
 let cachedPreviousEntries: Entry[] = [];
 
+const timestampCache = new Map<string, string>();
+
 const DEFAULT_HISTORY_INITIAL = 12;
 const DEFAULT_HISTORY_BATCH = 20;
 
@@ -51,16 +53,28 @@ const cleanHistoryObserver = (): void => {
     }
 };
 
+const getCachedTimestamp = (isoString: string): string => {
+    if (!isoString) {
+        return "";
+    }
+
+    const cached = timestampCache.get(isoString);
+    if (cached !== undefined) return cached;
+    
+    const formatted = new Date(isoString).toLocaleString();
+    const safe = formatted === "Invalid Date" ? "" : formatted;
+    
+    timestampCache.set(isoString, safe);
+    return safe;
+};
+
 const buildHistoryEntriesHtml = (
     entries: Entry[],
     committedPrefix: string,
     immutableBadgeText: string
 ): string => {
     return entries.map(entry => {
-        const entryTimestampRaw = new Date(entry.timestamp).toLocaleString();
-        const entryTimestamp = escapeHtmlContent(
-            entryTimestampRaw === "Invalid Date" ? "" : entryTimestampRaw
-        );
+        const entryTimestamp = escapeHtmlContent(getCachedTimestamp(entry.timestamp));
 
         return `
             <div class="history-entry committed-entry">
@@ -105,13 +119,17 @@ const appendNextHistoryBatch = (
         cleanHistoryObserver();
     }
 
-    requestAnimationFrame(() => {
-        initializeMagneticEffect();
-    });
+    const hasHistory = container.querySelector('.history-entry') !== null;
+
+    if (hasHistory) {
+        requestAnimationFrame(() => {
+            initializeMagneticEffect();
+        });
+    }
 };
 
 export const renderHistoryView = (
-    options?: { initialLimit?: number; batchSize?: number }
+    options?: { initialLimit?: number; batchSize?: number; skipEffects?: boolean }
 ): void => {
     const historyEntriesContainer = document.getElementById("historyContainer") as HTMLDivElement;
     
@@ -123,6 +141,7 @@ export const renderHistoryView = (
     const previousEntries = getPreviousEntries();
     const initialLimit = options?.initialLimit ?? DEFAULT_HISTORY_INITIAL;
     const batchSize = options?.batchSize ?? DEFAULT_HISTORY_BATCH;
+    const skipEffects = options?.skipEffects ?? false;
 
     let historyHTML = "";
 
@@ -137,10 +156,7 @@ export const renderHistoryView = (
             translationStrings?.committedNoticePrefix || "Committed"
         );
 
-        const committedTimestampRaw = new Date(todayEntry.timestamp).toLocaleString();
-        const committedTimestamp = escapeHtmlContent(
-            committedTimestampRaw === "Invalid Date" ? "" : committedTimestampRaw
-        );
+        const committedTimestamp = escapeHtmlContent(getCachedTimestamp(todayEntry.timestamp));
 
         historyHTML += `
             <div class="history-entry today committed-entry" data-is-new="true">
@@ -201,9 +217,15 @@ export const renderHistoryView = (
         historyObserver.observe(sentinel);
     }
 
-    requestAnimationFrame(() => {
-        initializeMagneticEffect();
-    });
+    if (!skipEffects) {
+        const hasHistory = historyEntriesContainer.querySelector('.history-entry') !== null;
+        
+        if (hasHistory) {
+            requestAnimationFrame(() => {
+                initializeMagneticEffect();
+            });
+        }
+    }
 };
 
 export const updateTodayUI = (entry: Entry): void => {

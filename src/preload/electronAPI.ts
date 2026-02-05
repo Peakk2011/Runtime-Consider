@@ -37,6 +37,27 @@ export interface ElectronAPI {
     app: AppAPI;
 }
 
+const isNonEmptyString = (value: unknown): value is string =>
+    typeof value === "string" && value.trim().length > 0;
+
+const isDateString = (value: unknown): value is string =>
+    typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+const deepFreeze = <T>(value: T): T => {
+    if (value && typeof value === "object") {
+        Object.freeze(value);
+
+        for (const key of Object.getOwnPropertyNames(value)) {
+            const prop = (value as Record<string, unknown>)[key];
+
+            if (prop && typeof prop === "object" && !Object.isFrozen(prop)) {
+                deepFreeze(prop);
+            }
+        }
+    }
+    return value;
+};
+
 /**
  * Storage API - Exposed via contextBridge
  */
@@ -44,11 +65,38 @@ const storageAPI: StorageAPI = {
     getToday: () => ipcRenderer.invoke("storage:getToday"),
     getTodayEntry: () => ipcRenderer.invoke("storage:getTodayEntry"),
     getAllEntries: () => ipcRenderer.invoke("storage:getAllEntries"),
-    getEntry: (date: string) => ipcRenderer.invoke("storage:getEntry", date),
-    saveEntry: (date: string, text: string) => ipcRenderer.invoke("storage:saveEntry", date, text),
-    deleteEntry: (date: string) => ipcRenderer.invoke("storage:deleteEntry", date),
-    exportData: (suggestedFileName?: string) =>
-        ipcRenderer.invoke("storage:exportData", suggestedFileName),
+
+    getEntry: (date: string) => {
+        if (!isDateString(date)) {
+            return Promise.reject(new Error("Invalid date format"));
+        }
+        return ipcRenderer.invoke("storage:getEntry", date);
+    },
+
+    saveEntry: (date: string, text: string) => {
+        if (!isDateString(date)) {
+            return Promise.reject(new Error("Invalid date format"));
+        }
+        if (!isNonEmptyString(text)) {
+            return Promise.reject(new Error("Entry text cannot be empty"));
+        }
+        return ipcRenderer.invoke("storage:saveEntry", date, text);
+    },
+
+    deleteEntry: (date: string) => {
+        if (!isDateString(date)) {
+            return Promise.reject(new Error("Invalid date format"));
+        }
+        return ipcRenderer.invoke("storage:deleteEntry", date);
+    },
+
+    exportData: (suggestedFileName?: string) => {
+        if (suggestedFileName !== undefined && !isNonEmptyString(suggestedFileName)) {
+            return Promise.reject(new Error("Invalid export file name"));
+        }
+        return ipcRenderer.invoke("storage:exportData", suggestedFileName);
+    },
+
     createBackup: () => ipcRenderer.invoke("storage:createBackup"),
 };
 
@@ -57,8 +105,13 @@ const storageAPI: StorageAPI = {
  */
 const configAPI: ConfigAPI = {
     getConfig: () => ipcRenderer.invoke("config:getConfig"),
-    saveConfig: (config: Record<string, unknown>) =>
-        ipcRenderer.invoke("config:saveConfig", config),
+
+    saveConfig: (config: Record<string, unknown>) => {
+        if (!config || typeof config !== "object") {
+            return Promise.reject(new Error("Invalid config payload"));
+        }
+        return ipcRenderer.invoke("config:saveConfig", config);
+    },
 };
 
 /**
@@ -66,12 +119,17 @@ const configAPI: ConfigAPI = {
  */
 const loggerAPI: LoggerAPI = {
     info: (message: string, data?: Record<string, unknown>) => {
+        if (!isNonEmptyString(message)) return;
         ipcRenderer.send("logger:info", { message, data });
     },
+
     warn: (message: string, data?: Record<string, unknown>) => {
+        if (!isNonEmptyString(message)) return;
         ipcRenderer.send("logger:warn", { message, data });
     },
+    
     error: (message: string, error?: Record<string, unknown>) => {
+        if (!isNonEmptyString(message)) return;
         ipcRenderer.send("logger:error", { message, error });
     },
 };
@@ -95,6 +153,8 @@ contextBridge.exposeInMainWorld("electron", {
     logger: loggerAPI,
     app: appAPI,
 } as ElectronAPI);
+
+deepFreeze((window as Window & { electron: ElectronAPI }).electron);
 
 /**
  * Type augmentation for window object

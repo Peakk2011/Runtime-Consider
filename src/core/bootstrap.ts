@@ -19,14 +19,6 @@ export const initializeCoreServices = async (): Promise<void> => {
         // Initialize storage
         const storage = getStorage();
 
-        // Load existing entries
-        const existingEntries = await storage.loadAllEntries();
-        const entryDates = existingEntries.map((file) => file.replace(".json", ""));
-
-        // Initialize entry state manager
-        const stateManager = getEntryStateManager();
-        await stateManager.loadCommittedEntries(entryDates);
-
         // Load or initialize config
         let config = await storage.loadConfig();
 
@@ -45,13 +37,34 @@ export const initializeCoreServices = async (): Promise<void> => {
         const validatedConfig = validateAppConfig(config);
         const configManager = getConfigManager(validatedConfig);
 
-        // Register IPC handlers
+        // Register IPC handlers early so renderer can call immediately
         registerIPCHandlers();
 
         logger.info("Core services initialized");
     } catch (error) {
         logger.error("Failed to initialize core services", error);
         throw error;
+    }
+};
+
+/**
+ * Initialize deferred services after UI is shown
+ */
+export const initializeDeferredServices = async (): Promise<void> => {
+    try {
+        const storage = getStorage();
+        
+        const existingEntries = await storage.loadAllEntries();
+        const entryDates = existingEntries.map((file) => file.replace(".json", ""));
+
+        const stateManager = getEntryStateManager();
+        await stateManager.loadCommittedEntries(entryDates);
+        
+        logger.info("Deferred services initialized");
+    } catch (error) {
+        logger.warn("Deferred services failed to initialize", {
+            error: error instanceof Error ? error.message : String(error),
+        });
     }
 };
 

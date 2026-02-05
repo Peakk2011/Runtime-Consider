@@ -105,11 +105,18 @@ export class StorageManager {
             } catch {
                 return null;
             }
+            
             const data = await fsPromises.readFile(filePath, "utf-8");
-            return JSON.parse(data);
+            
+            try {
+                return JSON.parse(data);
+            } catch (parseError) {
+                logger.warn("Corrupted entry JSON", { date, path: filePath });
+                return null;
+            }
         } catch (error) {
             logger.error(`Failed to load entry for date ${date}`, error);
-            throw error;
+            return null;
         }
     }
 
@@ -169,7 +176,12 @@ export class StorageManager {
 
             for (const filename of entries) {
                 const date = filename.replace(".json", "");
-                data[date] = await this.loadEntry(date);
+                const entry = await this.loadEntry(date);
+                if (entry) {
+                    data[date] = entry;
+                } else {
+                    logger.warn("Skipping corrupted entry during export", { date });
+                }
             }
 
             const exportData = {
@@ -200,7 +212,13 @@ export class StorageManager {
 
             for (const filename of entries) {
                 const date = filename.replace(".json", "");
-                data[date] = await this.loadEntry(date);
+                const entry = await this.loadEntry(date);
+
+                if (entry) {
+                    data[date] = entry;
+                } else {
+                    logger.warn("Skipping corrupted entry during backup", { date });
+                }
             }
 
             const backupData = {
@@ -243,16 +261,24 @@ export class StorageManager {
     public async loadConfig(): Promise<unknown> {
         try {
             const configPath = path.join(this.baseDir, "config.json");
+            
             try {
                 await fsPromises.access(configPath, fs.constants.R_OK);
             } catch {
                 return null;
             }
+            
             const data = await fsPromises.readFile(configPath, "utf-8");
-            return JSON.parse(data);
+
+            try {
+                return JSON.parse(data);
+            } catch (parseError) {
+                logger.warn("Corrupted config JSON", { path: configPath });
+                return null;
+            }
         } catch (error) {
             logger.error("Failed to load config", error);
-            throw error;
+            return null;
         }
     }
 
