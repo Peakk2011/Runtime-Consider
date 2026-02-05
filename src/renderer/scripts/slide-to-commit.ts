@@ -325,9 +325,16 @@ export const createSlideToCommitModal = (onCommit: () => void): HTMLElement => {
         }, 300);
     };
 
-    cancelBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => {
+    const onOverlayClick = (e: MouseEvent) => {
         if (e.target === overlay) closeModal();
+    };
+
+    cancelBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', onOverlayClick);
+    
+    addCleanup(() => {
+        cancelBtn.removeEventListener('click', closeModal);
+        overlay.removeEventListener('click', onOverlayClick);
     });
 
     // Cleanup function

@@ -194,13 +194,8 @@ export const createSlideActionModal = (
         document.removeEventListener('touchend', onTouchEnd);
     });
 
-    const cleanup = () => {
-        cleanupFns.forEach(fn => fn());
-        cleanupFns = [];
-    };
-
     // Close on backdrop click (outside track)
-    overlay.addEventListener('click', (e) => {
+    const onOverlayClick = (e: MouseEvent) => {
         if (e.target === overlay && currentHeight <= MIN_HEIGHT + 10) {
             overlay.style.opacity = '0';
             setTimeout(() => {
@@ -210,7 +205,15 @@ export const createSlideActionModal = (
                 }
             }, 300);
         }
-    });
+    };
+    
+    overlay.addEventListener('click', onOverlayClick);
+    addCleanup(() => overlay.removeEventListener('click', onOverlayClick));
+
+    const cleanup = () => {
+        cleanupFns.forEach(fn => fn());
+        cleanupFns = [];
+    };
 
     // Init
     updateHeight(MIN_HEIGHT);

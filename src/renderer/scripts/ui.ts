@@ -20,6 +20,12 @@ export const autoExpandTextarea = (textareaElement: HTMLTextAreaElement): void =
 
 export const renderHistoryView = (): void => {
     const historyEntriesContainer = document.getElementById("historyContainer") as HTMLDivElement;
+    
+    if (!historyEntriesContainer) {
+        console.warn("History container not found");
+        return;
+    }
+    
     const previousEntries = getPreviousEntries();
 
     let historyHTML = "";
@@ -34,8 +40,10 @@ export const renderHistoryView = (): void => {
         const committedPrefix = escapeHtmlContent(
             translationStrings?.committedNoticePrefix || "Committed"
         );
+
+        const committedTimestampRaw = new Date(todayEntry.timestamp).toLocaleString();
         const committedTimestamp = escapeHtmlContent(
-            new Date(todayEntry.timestamp).toLocaleString()
+            committedTimestampRaw === "Invalid Date" ? "" : committedTimestampRaw
         );
 
         historyHTML += `
@@ -61,8 +69,9 @@ export const renderHistoryView = (): void => {
         );
 
         const previousEntriesHTML = previousEntries.map(entry => {
+            const entryTimestampRaw = new Date(entry.timestamp).toLocaleString();
             const entryTimestamp = escapeHtmlContent(
-                new Date(entry.timestamp).toLocaleString()
+                entryTimestampRaw === "Invalid Date" ? "" : entryTimestampRaw
             );
 
             return `
@@ -101,6 +110,10 @@ export const updateTodayUI = (entry: Entry): void => {
     const todayTextInput = document.getElementById("todayInput") as HTMLTextAreaElement;
     const commitButton = document.getElementById("commitBtn") as HTMLButtonElement;
     const committedStatusNotice = document.getElementById("committedNotice") as HTMLDivElement;
+    if (!todayTextInput || !commitButton || !committedStatusNotice) {
+        console.warn("Today UI elements not found");
+        return;
+    }
 
     todayTextInput.value = entry.text;
     todayTextInput.disabled = true;
@@ -115,8 +128,12 @@ export const updateTodayUI = (entry: Entry): void => {
     committedStatusNotice.style.display = "block";
 
     const committedPrefix = translationStrings?.committedNoticePrefix || 'Committed at';
-    const committedTime = new Date(entry.timestamp).toLocaleTimeString();
-    committedStatusNotice.textContent = `${committedPrefix} ${committedTime}`;
+    const committedTimeRaw = new Date(entry.timestamp).toLocaleTimeString();
+    const committedTime = committedTimeRaw === "Invalid Date" ? "" : committedTimeRaw;
+    
+    committedStatusNotice.textContent = committedTime
+        ? `${committedPrefix} ${committedTime}`
+        : committedPrefix;
 };
 
 export const applyThemePreference = (themePreference: string | undefined): void => {

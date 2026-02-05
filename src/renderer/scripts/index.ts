@@ -6,7 +6,16 @@ import { loadAllEntries, saveEntry, getTodayEntry } from './storage';
 import { renderHistoryView, autoExpandTextarea, updateTodayUI } from './ui';
 import { createHamburgerMenu } from './menu';
 import { showSlideToCommitModal } from './slide-to-commit';
+import { runtimeConsiderSafeMode, isSafeMode } from './safe-mode';
 // import { getStorage } from '@/core/storage/storageManager';
+
+window.addEventListener("error", (event) => {
+    runtimeConsiderSafeMode("window.error", event.error);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+    runtimeConsiderSafeMode("unhandledrejection", event.reason);
+});
 
 window.electron.app.getOS().then(os => {
     document.body.classList.add(`os-${os}`);
@@ -21,10 +30,16 @@ const todayTextInput = document.getElementById("todayInput") as HTMLTextAreaElem
 const commitButton = document.getElementById("commitBtn") as HTMLButtonElement;
 
 // Set today's date label
-todayDateLabel.textContent = todayDateString;
+if (todayDateLabel) {
+    todayDateLabel.textContent = todayDateString;
+} else {
+    runtimeConsiderSafeMode("Missing today label element");
+}
 
 // Entry commit handler
 const handleCommitEntry = async (): Promise<void> => {
+    if (isSafeMode()) return;
+    
     const trimmedText = todayTextInput.value.trim();
 
     if (!trimmedText || isTodayCommitted) {
@@ -63,12 +78,14 @@ const handleCommitEntry = async (): Promise<void> => {
 
 // Textarea event handlers
 const handleTextareaInput = (): void => {
+    if (isSafeMode()) return;
     if (!isTodayCommitted) {
         autoExpandTextarea(todayTextInput);
     }
 };
 
 const handleTextareaKeydown = (event: KeyboardEvent): void => {
+    if (isSafeMode()) return;
     const isCommitShortcut = (event.metaKey || event.ctrlKey) && event.key === "Enter";
 
     if (isCommitShortcut) {
@@ -94,14 +111,19 @@ const initializeApp = async (): Promise<void> => {
 
     } catch (error) {
         console.error("Failed to initialize app:", error);
-        todayTextInput.focus();
+        runtimeConsiderSafeMode("initializeApp failed", error);
+        todayTextInput?.focus();
     }
 };
 
 // Event listeners
-commitButton.addEventListener("click", handleCommitEntry);
-todayTextInput.addEventListener("keydown", handleTextareaKeydown);
-todayTextInput.addEventListener("input", handleTextareaInput);
+if (!commitButton || !todayTextInput) {
+    runtimeConsiderSafeMode("Missing required input elements");
+} else {
+    commitButton.addEventListener("click", handleCommitEntry);
+    todayTextInput.addEventListener("keydown", handleTextareaKeydown);
+    todayTextInput.addEventListener("input", handleTextareaInput);
+}
 
 // Start the app
 initializeApp();
@@ -109,6 +131,7 @@ initializeApp();
 // Create hamburger menu
 createHamburgerMenu().catch((error) => {
     console.error('Failed to create hamburger menu', error);
+    runtimeConsiderSafeMode("createHamburgerMenu failed", error);
 });
 
 if (process.env.NODE_ENV === 'production') {

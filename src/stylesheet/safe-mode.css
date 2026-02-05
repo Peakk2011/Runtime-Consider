@@ -1,0 +1,60 @@
+/* Runtime Consider Safe mode */
+
+.safe-mode .container,
+.safe-mode .input-message,
+.safe-mode .editor-mask {
+    filter: blur(2px);
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.safe-mode-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(6px);
+}
+
+.safe-mode-card {
+    width: min(420px, 90vw);
+    background: var(--theme-bg-1-default);
+    border: 1px solid var(--theme-border-1-default);
+    box-shadow: var(--shadow);
+    padding: 1.2rem;
+    text-align: left;
+}
+
+.safe-mode-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.safe-mode-message {
+    margin-top: 0.6rem;
+    font-size: 13px;
+    color: var(--theme-text-2-default);
+}
+
+.safe-mode-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.6rem;
+}
+
+.safe-mode-btn {
+    background: var(--theme-bg-2-default);
+    border: 1px solid var(--theme-border-1-default);
+    color: var(--theme-text-1-default);
+    padding: 0.5rem 0.8rem;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.safe-mode-secondary {
+    opacity: 0.8;
+}
