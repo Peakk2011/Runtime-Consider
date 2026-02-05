@@ -4,6 +4,7 @@ export const isSafeMode = (): boolean => isInSafeMode;
 
 export const runtimeConsiderSafeMode = (reason: string, error?: unknown): void => {
     if (isInSafeMode) return;
+    
     isInSafeMode = true;
 
     try {
@@ -26,6 +27,7 @@ export const runtimeConsiderSafeMode = (reason: string, error?: unknown): void =
         `;
 
         const existing = document.querySelector(".safe-mode-overlay");
+
         if (existing) {
             existing.remove();
         }
@@ -45,6 +47,7 @@ export const runtimeConsiderSafeMode = (reason: string, error?: unknown): void =
 
         const commitButton = document.getElementById("commitBtn") as HTMLButtonElement | null;
         const todayTextInput = document.getElementById("todayInput") as HTMLTextAreaElement | null;
+
         commitButton?.setAttribute("disabled", "true");
         todayTextInput?.setAttribute("disabled", "true");
     } catch (fatalError) {

@@ -96,6 +96,8 @@ const handleTextareaKeydown = (event: KeyboardEvent): void => {
 // Initialize app
 const initializeApp = async (): Promise<void> => {
     try {
+        renderHistoryView({ initialLimit: 8, batchSize: 16 });
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         await loadAllEntries();
 
         const todayEntry = getTodayEntry();
@@ -107,7 +109,7 @@ const initializeApp = async (): Promise<void> => {
             todayTextInput.focus();
         }
 
-        renderHistoryView();
+        renderHistoryView({ initialLimit: 12, batchSize: 20 });
 
     } catch (error) {
         console.error("Failed to initialize app:", error);

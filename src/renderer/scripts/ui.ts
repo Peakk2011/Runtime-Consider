@@ -6,6 +6,13 @@ import { todayDateString } from './constants';
 import { translationStrings } from './i18n';
 import { getPreviousEntries, getTodayEntry } from './storage';
 
+let historyObserver: IntersectionObserver | null = null;
+let historyRenderedCount = 0;
+let cachedPreviousEntries: Entry[] = [];
+
+const DEFAULT_HISTORY_INITIAL = 12;
+const DEFAULT_HISTORY_BATCH = 20;
+
 export const escapeHtmlContent = (textContent: string): string => {
     const temporaryDiv = document.createElement("div");
     temporaryDiv.textContent = textContent;
@@ -18,7 +25,94 @@ export const autoExpandTextarea = (textareaElement: HTMLTextAreaElement): void =
     textareaElement.style.height = `${newHeight}px`;
 };
 
-export const renderHistoryView = (): void => {
+const checkHistoryContainerListeners = (container: HTMLDivElement): void => {
+    if (container.dataset.bound === "1") return;
+    container.dataset.bound = "1";
+
+    container.addEventListener('contextmenu', (event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.history-entry')) {
+            event.preventDefault();
+        }
+    });
+
+    container.addEventListener('dblclick', (event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.history-entry')) {
+            event.preventDefault();
+        }
+    });
+};
+
+const cleanHistoryObserver = (): void => {
+    if (historyObserver) {
+        historyObserver.disconnect();
+        historyObserver = null;
+    }
+};
+
+const buildHistoryEntriesHtml = (
+    entries: Entry[],
+    committedPrefix: string,
+    immutableBadgeText: string
+): string => {
+    return entries.map(entry => {
+        const entryTimestampRaw = new Date(entry.timestamp).toLocaleString();
+        const entryTimestamp = escapeHtmlContent(
+            entryTimestampRaw === "Invalid Date" ? "" : entryTimestampRaw
+        );
+
+        return `
+            <div class="history-entry committed-entry">
+                <div class="history-date">${entry.date}</div>
+                <div class="history-text">${escapeHtmlContent(entry.text)}</div>
+                <div class="history-timestamp">${committedPrefix} ${entryTimestamp}</div>
+                <div class="immutable-badge">${immutableBadgeText}</div>
+            </div>
+        `;
+    }).join('');
+};
+
+const appendNextHistoryBatch = (
+    container: HTMLDivElement,
+    committedPrefix: string,
+    immutableBadgeText: string,
+    batchSize: number
+): void => {
+    const nextBatch = cachedPreviousEntries.slice(
+        historyRenderedCount,
+        historyRenderedCount + batchSize
+    );
+    
+    if (nextBatch.length === 0) {
+        const sentinel = container.querySelector('#historySentinel');
+        sentinel?.remove();
+        cleanHistoryObserver();
+        return;
+    }
+
+    container.insertAdjacentHTML("beforeend", buildHistoryEntriesHtml(
+        nextBatch,
+        committedPrefix,
+        immutableBadgeText
+    ));
+    
+    historyRenderedCount += nextBatch.length;
+
+    if (historyRenderedCount >= cachedPreviousEntries.length) {
+        const sentinel = container.querySelector('#historySentinel');
+        sentinel?.remove();
+        cleanHistoryObserver();
+    }
+
+    requestAnimationFrame(() => {
+        initializeMagneticEffect();
+    });
+};
+
+export const renderHistoryView = (
+    options?: { initialLimit?: number; batchSize?: number }
+): void => {
     const historyEntriesContainer = document.getElementById("historyContainer") as HTMLDivElement;
     
     if (!historyEntriesContainer) {
@@ -27,6 +121,8 @@ export const renderHistoryView = (): void => {
     }
     
     const previousEntries = getPreviousEntries();
+    const initialLimit = options?.initialLimit ?? DEFAULT_HISTORY_INITIAL;
+    const batchSize = options?.batchSize ?? DEFAULT_HISTORY_BATCH;
 
     let historyHTML = "";
 
@@ -67,43 +163,47 @@ export const renderHistoryView = (): void => {
         const immutableBadgeText = escapeHtmlContent(
             translationStrings?.immutableBadge || ""
         );
+        const initialBatch = previousEntries.slice(0, initialLimit);
+        historyRenderedCount = initialBatch.length;
+        cachedPreviousEntries = previousEntries;
 
-        const previousEntriesHTML = previousEntries.map(entry => {
-            const entryTimestampRaw = new Date(entry.timestamp).toLocaleString();
-            const entryTimestamp = escapeHtmlContent(
-                entryTimestampRaw === "Invalid Date" ? "" : entryTimestampRaw
-            );
+        historyHTML += buildHistoryEntriesHtml(initialBatch, committedPrefix, immutableBadgeText);
 
-            return `
-                <div class="history-entry committed-entry">
-                    <div class="history-date">${entry.date}</div>
-                    <div class="history-text">${escapeHtmlContent(entry.text)}</div>
-                    <div class="history-timestamp">${committedPrefix} ${entryTimestamp}</div>
-                    <div class="immutable-badge">${immutableBadgeText}</div>
-                </div>
-            `;
-        }).join('');
-
-        historyHTML += previousEntriesHTML;
+        if (historyRenderedCount < previousEntries.length) {
+            historyHTML += `<div id="historySentinel"></div>`;
+        }
     }
 
+    cleanHistoryObserver();
     historyEntriesContainer.innerHTML = historyHTML;
 
-    const allHistoryEntries = historyEntriesContainer.querySelectorAll('.history-entry');
+    checkHistoryContainerListeners(historyEntriesContainer);
 
-    allHistoryEntries.forEach((entryElement) => {
-        entryElement.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-            return false;
-        });
+    const sentinel = historyEntriesContainer.querySelector('#historySentinel');
+    
+    if (sentinel && cachedPreviousEntries.length > historyRenderedCount) {
+        const committedPrefix = escapeHtmlContent(
+            translationStrings?.committedNoticePrefix || "Committed"
+        );
+        const immutableBadgeText = escapeHtmlContent(
+            translationStrings?.immutableBadge || ""
+        );
+        historyObserver = new IntersectionObserver((entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+                appendNextHistoryBatch(
+                    historyEntriesContainer,
+                    committedPrefix,
+                    immutableBadgeText,
+                    batchSize
+                );
+            }
+        }, { rootMargin: "200px" });
+        historyObserver.observe(sentinel);
+    }
 
-        entryElement.addEventListener('dblclick', (event) => {
-            event.preventDefault();
-            return false;
-        });
+    requestAnimationFrame(() => {
+        initializeMagneticEffect();
     });
-
-    initializeMagneticEffect();
 };
 
 export const updateTodayUI = (entry: Entry): void => {

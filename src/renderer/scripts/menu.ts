@@ -156,7 +156,8 @@ export const createHamburgerMenu = async (): Promise<void> => {
         const selectedLanguage = languageSelectElement.value;
         await loadTranslations(selectedLanguage);
         await saveUserConfig(selectedLanguage, undefined);
-        renderHistoryView();
+        
+        renderHistoryView({ initialLimit: 12, batchSize: 20 });
 
         if (translationStrings.languageLabel) {
             languageLabelText.textContent = `${translationStrings.languageLabel}: `;
