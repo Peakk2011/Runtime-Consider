@@ -1,10 +1,21 @@
-<img src="./assets/Runtime Consider.png" alt="Runtime Consider Logo" width="125"/>
+<p align='center'>
+  <img src="./assets/Runtime Consider.png" alt="Runtime Consider Logo" width="85"/>
 
-# Runtime Consider
-## Recording what actually happened
+  <h1 align='center'>
+    Runtime Consider
+  </h1>
+
+  <p align='center'>
+    Recording what actually happened
+  </p>
+</p>
 
 <br>
-<img src="./assets/mockup-of-runtime-consider.svg" alt="Runtime Consider Hero" width="600"/>
+<p align='center'>
+  <img src="./assets/mockup-of-runtime-consider.svg" alt="Runtime Consider Hero" width="600"/>
+</p>
+
+<br>
 
 ### What is this application for
 
